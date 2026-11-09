@@ -2,7 +2,7 @@
   "name": "brilliant-chess",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://wdeloo.github.io/Brilliant-Chess/",
+  "homepage": "https://n1zyx3.github.io/Brilliant-Chess/",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
