@@ -34,6 +34,8 @@ type pageState = 'default' | 'loading' | 'analyze' | 'analyzeCustom'
 
 type tabs = 'analyze' | 'selectGame' | 'summary' | 'moves'
 
+export const PENDING_ANALYSIS_KEY = 'brilliantChessPendingAnalysisPgn'
+
 const abortControllerInstance = new AbortController()
 
 export const AnalyzeContext = createContext<{
@@ -81,7 +83,19 @@ export const AnalyzeContext = createContext<{
 })
 
 export default function AnalyzeContextProvider(props: { children: React.ReactNode }) {
-    const [data, setData] = useState<Data>({format: "fen", string: ""})
+    const [data, setData] = useState<Data>(() => {
+        if (typeof window === 'undefined') return { format: "fen", string: "" }
+
+        try {
+            const pendingPgn = window.sessionStorage.getItem(PENDING_ANALYSIS_KEY)
+            if (pendingPgn) {
+                window.sessionStorage.removeItem(PENDING_ANALYSIS_KEY)
+                return { format: "pgn", string: pendingPgn }
+            }
+        } catch { }
+
+        return { format: "fen", string: "" }
+    })
     const [pageState, setPageState] = useState<pageState>('default')
     const [game, setGame] = useState<move[]>([])
     const [players, setPlayers] = useState<players>([{ name: 'White', elo: '?' }, { name: 'Black', elo: '?' }])

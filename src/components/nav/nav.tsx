@@ -77,6 +77,10 @@ export default function Nav() {
                         <Image draggable={false} height={30} width={30} alt="logo" src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/logo.svg`} className="navTop:mt-[-2px]" />
                         <div className="h-fit w-fit reduceNav:block hidden">Brilliant<span className="text-sm font-light">Chess</span></div>
                     </Link>
+                    <Link title="Запись игры" draggable={false} onMouseEnter={() => setOpenedMenu(null)} href="/record" className="text-lg outline-none font-bold navTop:px-3 navTop:py-2 p-1.5 hover:bg-backgroundBoxHover hover:text-foregroundHighlighted transition-colors flex flex-row gap-2">
+                        <Image draggable={false} height={30} width={30} alt="Запись игры" src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/pgn.svg`} className="transition-colors" />
+                        <div className="h-fit w-fit reduceNav:block hidden">Запись игры</div>
+                    </Link>
                     {topLinks.map((link, i) => {
                         return (
                             <button onClick={link?.click} onMouseEnter={link?.hover} onMouseLeave={link?.unHover} type="button" key={i} className="text-lg outline-none font-bold navTop:px-3 navTop:py-2 p-1.5 hover:bg-backgroundBoxHover hover:text-foregroundHighlighted transition-colors flex flex-row gap-2">
