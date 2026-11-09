@@ -84,6 +84,11 @@ const castleSound = new Howl({
     preload: true,
 })
 
+const brilliantSound = new Howl({
+    src: [`${process.env.NEXT_PUBLIC_BASE_PATH}/sounds/brilliant.wav`],
+    preload: true,
+})
+
 function isEven(num: number) {
     return (num % 2) === 0
 }
@@ -478,8 +483,11 @@ export default function Board(props: { cleanArrows: () => void, sacrifice?: bool
     useEffect(() => {
         if (!props.fen) return
         if (!boardSounds) return
+        if (analyzingMove) return
 
-        if (soundCastleInstance) {
+        if (forward && props.moveRating === 'brilliant') {
+            brilliantSound.play()
+        } else if (soundCastleInstance) {
             castleSound.play()
         } else if (soundCaptureInstance) {
             captureSound.play()
@@ -496,7 +504,7 @@ export default function Board(props: { cleanArrows: () => void, sacrifice?: bool
         if (gameEnded) {
             gameEndSound.play()
         }
-    }, [fen])
+    }, [fen, props.moveRating, analyzingMove])
 
     useEffect(() => {
         if (!animation) return
