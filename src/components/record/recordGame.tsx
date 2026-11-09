@@ -115,7 +115,7 @@ export default function RecordGame() {
 
     const position = new Chess(fen)
     const gameOver = position.isGameOver()
-    const moveHistory = position.history({ verbose: true })
+    const moveHistory = chess.history({ verbose: true })
     const endText = getEndText(position)
     const turn = position.turn() === 'w' ? 'Белые' : 'Чёрные'
     const isCheck = position.isCheck()
