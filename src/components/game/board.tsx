@@ -24,6 +24,30 @@ interface coronation {
     movement: square[]
 }
 
+interface touchState {
+    active: boolean
+    from: string
+    square: square
+    startX: number
+    startY: number
+    moved: boolean
+    ownPiece: boolean
+    selectedBefore: string
+}
+
+// Touch screens emit compatibility mouse events after a tap. Whenever we
+// handle a gesture ourselves we ignore those synthetic events for a moment
+// so that a single tap can't select a piece twice or make two moves.
+let suppressMouseUntil = 0
+
+function isMouseSuppressed() {
+    return Date.now() < suppressMouseUntil
+}
+
+function suppressMouse() {
+    suppressMouseUntil = Date.now() + 700
+}
+
 const HIGHLIGHT_COLORS = {
     forced: "",
     brilliant: "var(--highlightBrilliant)",
@@ -295,16 +319,19 @@ function Coronation(props: { white: boolean, column: number, coroningWhite: bool
     )
 }
 
-function Piece(props: { squareSize: number, pieceRef: RefObject<HTMLDivElement>, castleRookRef: RefObject<HTMLDivElement>, moved: boolean, isCastleRook: boolean, pieceColor: Color, pieceSymbol: PieceSymbol, drag: drag, setDrag: (dragging: drag) => void, id: string, boardRef: RefObject<HTMLDivElement>, setPlaying: (playing: boolean) => void, isCoronating: boolean }) {
-    const { boardRef, pieceRef, castleRookRef, moved, isCastleRook, pieceColor, pieceSymbol, drag, setDrag, id, squareSize, setPlaying, isCoronating } = props
+function Piece(props: { squareSize: number, pieceRef: RefObject<HTMLDivElement>, castleRookRef: RefObject<HTMLDivElement>, moved: boolean, isCastleRook: boolean, pieceColor: Color, pieceSymbol: PieceSymbol, drag: drag, setDrag: (dragging: drag) => void, id: string, boardRef: RefObject<HTMLDivElement>, setPlaying: (playing: boolean) => void, isCoronating: boolean, canDragTouch: boolean }) {
+    const { boardRef, pieceRef, castleRookRef, moved, isCastleRook, pieceColor, pieceSymbol, drag, setDrag, id, squareSize, setPlaying, isCoronating, canDragTouch } = props
 
     const [movement, setMovement] = useState({ x: 0, y: 0 })
     const wasSelectedRef = useRef(false)
+
+    const touchDragRef = useRef<{ active: boolean, startX: number, startY: number, moved: boolean } | null>(null)
 
     if (isCoronating) return
 
     function handlePieceDragStart(e: React.MouseEvent) {
         if (e.button !== 0) return
+        if (isMouseSuppressed()) return
 
         wasSelectedRef.current = drag.id === id
 
@@ -396,10 +423,51 @@ function Piece(props: { squareSize: number, pieceRef: RefObject<HTMLDivElement>,
         setDrag({ is: false, id: newId })
     }
 
+    function handleTouchStart(e: React.TouchEvent) {
+        if (!canDragTouch) return
+
+        const touch = e.touches[0]
+        if (!touch) return
+
+        touchDragRef.current = { active: true, startX: touch.clientX, startY: touch.clientY, moved: false }
+        setMovement({ x: 0, y: 0 })
+        setPlaying(false)
+    }
+
+    function handleTouchMove(e: React.TouchEvent) {
+        const touchState = touchDragRef.current
+        if (!touchState?.active) return
+
+        const touch = e.touches[0]
+        if (!touch) return
+
+        const x = touch.clientX - touchState.startX
+        const y = touch.clientY - touchState.startY
+
+        if (!touchState.moved && (Math.abs(x) > 5 || Math.abs(y) > 5)) touchState.moved = true
+        if (touchState.moved) setMovement({ x, y })
+    }
+
+    function handleTouchEnd() {
+        if (!touchDragRef.current) return
+
+        touchDragRef.current = null
+        setMovement({ x: 0, y: 0 })
+    }
+
+    function handleTouchCancel() {
+        touchDragRef.current = null
+        setMovement({ x: 0, y: 0 })
+    }
+
     return (
         <div
             data-dontcleandrag={true}
             onMouseDown={handlePieceDragStart}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchCancel}
             ref={moved ? pieceRef : (isCastleRook ? castleRookRef : null)}
             className="w-full relative h-full z-[20] cursor-grab"
             style={{ top: movement.y || '', left: movement.x || '', zIndex: drag.is && drag.id === id ? 100 : '' }}
@@ -431,7 +499,19 @@ export default function Board(props: { cleanArrows: () => void, sacrifice?: bool
 
     const currentArrowRef = useRef<square[]>([])
 
+    const touchRef = useRef<touchState | null>(null)
+    const touchArrowRef = useRef<{ from: square, to?: square } | null>(null)
+    const arrowTimeoutRef = useRef<NodeJS.Timeout>()
+    const [arrowDraft, setArrowDraft] = useState<{ from: square, to?: square } | null>(null)
+    // Kept true after a touch interaction so the board keeps receiving taps
+    // while a piece is selected by touch (the pointer-events lock is only
+    // needed for the desktop drag ghost).
+    const [touchMode, setTouchMode] = useState(false)
+
     const { drag, bestMoveSan, setDrag, pushArrow, cleanArrows, setMaterialAdvantage, setPlaying, analyzingMove, arrows, previousStaticEvals, sacrifice, boardSize, bestMove, previousBestMove, moveRating, forward, white, animation, gameEnded, capture, nextCapture, castle, nextCastle, setAnimation, result, analyzeMove } = props
+
+    const dragRef = useRef(drag)
+    dragRef.current = drag
     const fen = props.fen
     const nextFen = props.nextFen
     const move = props.move ?? []
@@ -548,18 +628,10 @@ export default function Board(props: { cleanArrows: () => void, sacrifice?: bool
         return filteredHighlightStyle
     }
 
-    async function handleMovePiece(e: React.MouseEvent, toSquare: string) {
-        if (e.button !== 0) return
-        if (!drag.id) return
-
-        const animation = e.type === "mousedown" ? true : false
-
+    function movePiece(from: string, to: string, animate: boolean) {
         setTimeout(() => setDrag({ is: false, id: '' }), 0)
 
         if (analyzingMove) return
-
-        const from = drag.id
-        const to = toSquare
 
         const formattedFrom = formatSquare(from)
         const formattedTo = formatSquare(to)
@@ -567,8 +639,168 @@ export default function Board(props: { cleanArrows: () => void, sacrifice?: bool
         if (chess.get(from as Square)?.type === PAWN && [0, 7].includes(formattedTo.row)) {
             setCoronation({ choosing: true, movement: [formattedFrom, formattedTo] })
         } else {
-            analyzeMove(fen, { from, to }, sacrifice ?? false, previousStaticEvals ?? [], animation, bestMoveSan)
+            analyzeMove(fen, { from, to }, sacrifice ?? false, previousStaticEvals ?? [], animate, bestMoveSan)
         }
+    }
+
+    async function handleMovePiece(e: React.MouseEvent, toSquare: string) {
+        if (e.button !== 0) return
+        if (!dragRef.current.id) return
+        if (isMouseSuppressed()) return
+
+        movePiece(dragRef.current.id, toSquare, e.type === "mousedown")
+    }
+
+    function getTouchedSquare(clientX: number, clientY: number): { id: string, square: square } | null {
+        const board = boardRef.current
+        if (!board) return null
+
+        const rect = board.getBoundingClientRect()
+        const column = Math.floor((clientX - rect.left) / (rect.width / 8))
+        const row = Math.floor((clientY - rect.top) / (rect.height / 8))
+
+        if (column < 0 || column > 7 || row < 0 || row > 7) return null
+
+        const boardColumn = white ? column : 7 - column
+        const boardRow = white ? row : 7 - row
+
+        return { id: getSquareId(boardColumn, boardRow), square: { col: boardColumn, row: boardRow } }
+    }
+
+    function isLegalTouchMove(from: string, to: string) {
+        return chess.moves({ square: from as Square, verbose: true }).some(move => move.to === to)
+    }
+
+    function handleTouchStart(e: React.TouchEvent) {
+        if (coronation.choosing) return
+
+        const touch = e.touches[0]
+        if (!touch) return
+
+        const touched = getTouchedSquare(touch.clientX, touch.clientY)
+        if (!touched) return
+
+        suppressMouse()
+
+        const piece = chess.get(touched.id as Square)
+        const ownPiece = Boolean(piece && piece.color === chess.turn())
+
+        setTouchMode(true)
+
+        touchRef.current = {
+            active: true,
+            from: touched.id,
+            square: touched.square,
+            startX: touch.clientX,
+            startY: touch.clientY,
+            moved: false,
+            ownPiece,
+            selectedBefore: dragRef.current.id,
+        }
+
+        if (ownPiece) {
+            setDrag({ is: true, id: touched.id })
+            setPlaying(false)
+            return
+        }
+
+        // Long press on an empty square draws an arrow, just like right click
+        // on desktop. It is only armed when no piece is currently selected.
+        if (dragRef.current.id) return
+
+        clearTimeout(arrowTimeoutRef.current)
+        arrowTimeoutRef.current = setTimeout(() => {
+            const state = touchRef.current
+            if (!state?.active || state.moved) return
+
+            touchArrowRef.current = { from: touched.square }
+            setArrowDraft({ from: touched.square })
+        }, 420)
+    }
+
+    function handleTouchMove(e: React.TouchEvent) {
+        const state = touchRef.current
+        if (!state?.active) return
+
+        const touch = e.touches[0]
+        if (!touch) return
+
+        const x = touch.clientX - state.startX
+        const y = touch.clientY - state.startY
+
+        if (!state.moved && (Math.abs(x) > 5 || Math.abs(y) > 5)) {
+            state.moved = true
+            clearTimeout(arrowTimeoutRef.current)
+        }
+
+        if (!state.moved) return
+
+        if (touchArrowRef.current) {
+            const touched = getTouchedSquare(touch.clientX, touch.clientY)
+            if (!touched) return
+
+            touchArrowRef.current.to = touched.square
+            setArrowDraft({ from: touchArrowRef.current.from, to: touched.square })
+        }
+    }
+
+    function handleTouchEnd(e: React.TouchEvent) {
+        const state = touchRef.current
+        touchRef.current = null
+
+        clearTimeout(arrowTimeoutRef.current)
+
+        const arrowState = touchArrowRef.current
+        touchArrowRef.current = null
+
+        if (arrowState) {
+            setArrowDraft(null)
+            suppressMouse()
+
+            if (arrowState.to && (arrowState.to.col !== arrowState.from.col || arrowState.to.row !== arrowState.from.row)) {
+                pushArrow([arrowState.from, arrowState.to])
+            }
+            return
+        }
+
+        if (!state?.active) return
+
+        const touch = e.changedTouches[0]
+        const target = touch ? getTouchedSquare(touch.clientX, touch.clientY) : null
+        const selected = dragRef.current.id
+
+        if (state.moved) {
+            suppressMouse()
+
+            if (state.ownPiece && target && target.id !== state.from && isLegalTouchMove(state.from, target.id)) {
+                movePiece(state.from, target.id, true)
+            } else {
+                setDrag({ is: false, id: '' })
+            }
+            return
+        }
+
+        // A tap on one of our own pieces selects it (or deselects it when it
+        // was already selected).
+        if (state.ownPiece) {
+            setDrag({ is: false, id: state.selectedBefore === state.from ? '' : state.from })
+            return
+        }
+
+        if (selected && target && isLegalTouchMove(selected, target.id)) {
+            movePiece(selected, target.id, false)
+            return
+        }
+
+        setDrag({ is: false, id: '' })
+        cleanArrows()
+    }
+
+    function handleTouchCancel() {
+        touchRef.current = null
+        touchArrowRef.current = null
+        clearTimeout(arrowTimeoutRef.current)
+        setArrowDraft(null)
     }
 
     function cleanDrag(target: HTMLElement) {
@@ -579,6 +811,9 @@ export default function Board(props: { cleanArrows: () => void, sacrifice?: bool
 
     function handleMouseDown(e: React.MouseEvent) {
         if (drag.is) return
+        if (isMouseSuppressed()) return
+
+        setTouchMode(false)
 
         cleanDrag(e.target as HTMLElement)
 
@@ -595,6 +830,7 @@ export default function Board(props: { cleanArrows: () => void, sacrifice?: bool
 
     function handleMouseUp(e: React.MouseEvent) {
         if (drag.is) return
+        if (isMouseSuppressed()) return
 
         if (e.button === 2) {
             e.preventDefault()
@@ -660,7 +896,7 @@ export default function Board(props: { cleanArrows: () => void, sacrifice?: bool
     const adaptedCoronationSquare = coronation.movement[0] ? adaptSquare(coronation.movement[0]) : null
 
     return (
-        <div ref={boardRef} onContextMenu={e => e.preventDefault()} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} className="grid w-fit h-fit relative" style={{ gridTemplateColumns: `repeat(8, ${squareSize}px)`, pointerEvents: drag.is ? 'none' : 'unset' }}>
+        <div ref={boardRef} onContextMenu={e => e.preventDefault()} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchCancel} className="board-surface grid w-fit h-fit relative" style={{ gridTemplateColumns: `repeat(8, ${squareSize}px)`, pointerEvents: drag.is && !touchMode ? 'none' : 'unset' }}>
             {
                 (() => {
                     const squares: JSX.Element[] = []
@@ -761,6 +997,7 @@ export default function Board(props: { cleanArrows: () => void, sacrifice?: bool
                                     pieceColor={pieceColor}
                                     pieceSymbol={pieceType}
                                     boardRef={boardRef}
+                                    canDragTouch={Boolean(square?.color && square.color === chess.turn())}
                                     isCoronating={coronation.choosing && adaptedCoronationSquare?.col === columnNumber && adaptedCoronationSquare?.row === rowNumber}
                                 />
                             }
@@ -812,6 +1049,9 @@ export default function Board(props: { cleanArrows: () => void, sacrifice?: bool
 
                     return <Arrow key={i} move={singleSquare ? [move[0]] : move} squareSize={squareSize} class={singleSquare ? "bg-badArrow" : "fill-normalArrow stroke-normalArrow"} white={white} />
                 })
+            }
+            {
+                arrowDraft?.to ? <Arrow move={[arrowDraft.from, arrowDraft.to]} squareSize={squareSize} class="fill-normalArrow stroke-normalArrow opacity-60" white={white} /> : ''
             }
             {
                 (() => {

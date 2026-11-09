@@ -21,10 +21,10 @@ export default function BoardMenu() {
     }
 
     return (
-        <div className="flex flex-col justify-between h-full">
-            <div className='flex navTop:flex-col flex-row-reverse gap-2'>
-                <button className='outline-none' ref={boardMenuSettingsRef} onClick={() => setOpenedMenu(prev => prev === "settings" ? null : "settings")} type='button'><Image className='min-w-[17px]' src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/settings.svg`} title='Settings' alt="Settings" width={17} height={17} /></button>
-                <button className='outline-none' onClick={flipBoard} type='button'><Image src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/flip.svg`} title='Flip Board' alt="Flip Board" width={17} height={17} className='min-w-[17px]' /></button>
+        <div className="flex flex-col justify-between navTop:h-full">
+            <div className='flex navTop:flex-col flex-row-reverse gap-1'>
+                <button className='outline-none p-1.5 flex items-center justify-center' ref={boardMenuSettingsRef} onClick={() => setOpenedMenu(prev => prev === "settings" ? null : "settings")} type='button'><Image className='min-w-[17px]' src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/settings.svg`} title='Settings' alt="Settings" width={17} height={17} /></button>
+                <button className='outline-none p-1.5 flex items-center justify-center' onClick={flipBoard} type='button'><Image src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/flip.svg`} title='Flip Board' alt="Flip Board" width={17} height={17} className='min-w-[17px]' /></button>
             </div>
             <div>
 

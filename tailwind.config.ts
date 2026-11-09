@@ -81,6 +81,7 @@ export default {
     screens: {
       "navTop": `${navTop}px`,
       "vertical": `${maxVertical}px`,
+      "phoneLandscape": { "raw": "(orientation: landscape) and (max-height: 520px)" },
       "reduceNav": "1280px",
       "notFullDate": "1468px",
       "reduceSummary": `${reduceSummary}px`,

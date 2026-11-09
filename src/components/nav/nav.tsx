@@ -101,7 +101,7 @@ export default function Nav() {
                     })}
                 </div>
             </div>
-            <div ref={menuRef} style={{display: openedMenu ? '' : 'none'}} className="navTop:h-full h-fit max-h-[calc(100vh-42px)] navTop:max-h-full z-[500] p-2 bg-backgroundBoxDarker absolute navTop:left-full top-full navTop:top-0 select-none navTop:w-fit w-fit min-w-[300px] overflow-y-auto">
+            <div ref={menuRef} style={{display: openedMenu ? '' : 'none'}} className="navTop:h-full h-fit max-h-[calc(100dvh-42px)] navTop:max-h-full z-[500] p-2 bg-backgroundBoxDarker absolute navTop:left-full top-full navTop:top-0 select-none navTop:w-fit w-fit max-w-[100vw] min-w-[300px] overflow-y-auto">
                 <Settings hidden={openedMenu !== 'settings'} />
             </div>
         </nav>

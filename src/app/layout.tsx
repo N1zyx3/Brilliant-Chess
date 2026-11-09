@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import "./globals.css"
 
 import { Roboto } from 'next/font/google'
@@ -20,10 +20,16 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#302E2B",
+}
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html>
-      <body className={`flex navTop:flex-row flex-col items-center justify-start h-screen w-screen overflow-x-hidden ${roboto.className}`}>
+      <body className={`app-body flex navTop:flex-row flex-col items-center justify-start w-screen overflow-x-hidden ${roboto.className}`}>
         {children}
       </body>
     </html>

@@ -1,4 +1,4 @@
-export default function Pause(props: { class: string, click: () => void }) {
+export default function Pause(props: { class: string, click?: () => void }) {
    return (
       <svg
          className={props.class}

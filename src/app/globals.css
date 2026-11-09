@@ -84,3 +84,41 @@ body {
   scrollbar-width: var(--scrollbarSize);
   scrollbar-color: var(--scrollbarColor) transparent;
 }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Use the dynamic viewport height on mobile so the layout doesn't jump
+   when the browser address bar hides or shows. */
+.app-body {
+  height: 100vh;
+  height: 100dvh;
+  overscroll-behavior-y: contain;
+}
+
+/* Board gestures are handled by the app: disable native scrolling,
+   text selection and double-tap zoom on the board surface. */
+.board-surface {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+textarea,
+button,
+select,
+a {
+  touch-action: manipulation;
+}

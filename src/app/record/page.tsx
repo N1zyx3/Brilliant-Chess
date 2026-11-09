@@ -8,7 +8,7 @@ export default function RecordPage() {
             <header>
                 <Nav />
             </header>
-            <main className="flex flex-col vertical:flex-row h-full vertical:p-4 p-2 vertical:gap-2 gap-4 items-center vertical:justify-center select-none w-full overflow-x-hidden overflow-y-auto">
+            <main className="flex flex-col vertical:flex-row phoneLandscape:flex-row h-full vertical:p-4 p-2 vertical:gap-2 gap-4 items-center vertical:justify-center select-none w-full overflow-x-hidden overflow-y-auto">
                 <RecordGame />
             </main>
         </ConfigContextProvider>

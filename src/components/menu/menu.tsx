@@ -105,13 +105,13 @@ export default function Menu() {
     ]
 
     return (
-        <div ref={menuRef} className="vertical:h-full w-full max-w-[500px] pb-8 vertical:pb-0 vertical:min-h-0 min-h-[600px] select-text bg-backgroundBox rounded-borderRoundness flex-grow vertical:max-w-[500px] vertical:min-w-[400px] flex flex-col gap-4 overflow-hidden">
+        <div ref={menuRef} className="vertical:h-full phoneLandscape:h-full phoneLandscape:min-h-0 phoneLandscape:w-[380px] phoneLandscape:max-w-[380px] phoneLandscape:min-w-[340px] w-full max-w-[500px] pb-8 vertical:pb-0 vertical:min-h-0 min-h-[420px] navTop:min-h-[600px] select-text bg-backgroundBox rounded-borderRoundness flex-grow vertical:max-w-[500px] vertical:min-w-[400px] flex flex-col gap-4 overflow-hidden">
             <menu className="flex flex-row relative select-none">
                 {tabs.map((t, i) => {
                     if (!t.show) return
 
                     const isSelected = tab === t.state
-                    return <button role="tab" key={i} onClick={() => { setTab(t.state); t.onClick() }} className={`w-full flex flex-col gap-1 group items-center py-2 text-sm outline-none ${isSelected ? 'text-foreground' : 'bg-backgroundBoxBoxDisabled text-foregroundGrey cursor-pointer transition-colors hover:text-foregroundHighlighted'}`}>{t.icon(isSelected ? "fill-foreground" : "fill-foregroundGrey transition-colors group-hover:fill-foregroundHighlighted")}{t.label}</button>
+                    return <button role="tab" key={i} onClick={() => { setTab(t.state); t.onClick() }} className={`w-full flex flex-col gap-1 group items-center px-1 py-2 text-xs navTop:text-sm leading-tight outline-none ${isSelected ? 'text-foreground' : 'bg-backgroundBoxBoxDisabled text-foregroundGrey cursor-pointer transition-colors hover:text-foregroundHighlighted'}`}>{t.icon(isSelected ? "fill-foreground" : "fill-foregroundGrey transition-colors group-hover:fill-foregroundHighlighted")}{t.label}</button>
                 })}
             </menu>
             <div className="overflow-y-auto h-full flex flex-col">

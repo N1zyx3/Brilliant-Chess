@@ -485,7 +485,7 @@ export default function Game() {
             const navHeight = nav?.offsetHeight ?? 0
             const evalWidth = 36
             const menuWidth = 400
-            const boardMenuWidth = 17
+            const boardMenuWidth = 30
             const gapWidth = 8
             const paddingWidth = 16
 
@@ -494,7 +494,7 @@ export default function Game() {
 
             if (isNavTop) {
                 const paddingWidth = 8
-                const gameButtonsHeight = 40
+                const gameButtonsHeight = 48
 
                 const boardHeight = window.innerHeight - (navHeight + paddingWidth + evalWidth + gapWidth + statusBarHeight + gapWidth + gapWidth + statusBarHeight + gapHeight + gameButtonsHeight + gapHeight + boardMenuWidth + paddingWidth)
                 const maxWidth = window.innerWidth - (paddingWidth + paddingWidth)

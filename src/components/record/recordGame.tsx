@@ -110,6 +110,8 @@ export default function RecordGame() {
     const boardWrapperRef = useRef<HTMLDivElement>(null)
     const boardRef = useRef<HTMLDivElement>(null)
     const suppressClickRef = useRef(false)
+    const suppressMouseRef = useRef(0)
+    const touchRef = useRef<{ active: boolean, from: Square, startX: number, startY: number, moved: boolean } | null>(null)
     const copyTimeoutRef = useRef<NodeJS.Timeout>()
     const undoRef = useRef<() => void>(() => { })
 
@@ -259,6 +261,7 @@ export default function RecordGame() {
 
     function handlePieceMouseDown(e: React.MouseEvent, square: Square) {
         if (e.button !== 0) return
+        if (Date.now() < suppressMouseRef.current) return
 
         const piece = chess.get(square)
         if (!piece || piece.color !== chess.turn() || gameOver) return
@@ -299,6 +302,59 @@ export default function RecordGame() {
 
         window.addEventListener('mousemove', handleMouseMove)
         window.addEventListener('mouseup', handleMouseUp)
+    }
+
+    function handlePieceTouchStart(e: React.TouchEvent, square: Square) {
+        const piece = chess.get(square)
+        if (!piece || piece.color !== chess.turn() || gameOver) return
+
+        const touch = e.touches[0]
+        if (!touch) return
+
+        suppressMouseRef.current = Date.now() + 700
+        touchRef.current = { active: true, from: square, startX: touch.clientX, startY: touch.clientY, moved: false }
+    }
+
+    function handlePieceTouchMove(e: React.TouchEvent) {
+        const state = touchRef.current
+        if (!state?.active) return
+
+        const touch = e.touches[0]
+        if (!touch) return
+
+        const x = touch.clientX - state.startX
+        const y = touch.clientY - state.startY
+
+        if (!state.moved && (Math.abs(x) > 4 || Math.abs(y) > 4)) {
+            state.moved = true
+            setSelected(state.from)
+        }
+
+        if (state.moved) setDraggedPiece({ from: state.from, x, y })
+    }
+
+    function handlePieceTouchEnd(e: React.TouchEvent) {
+        const state = touchRef.current
+        touchRef.current = null
+
+        if (!state?.active) return
+
+        setDraggedPiece(null)
+
+        if (!state.moved) return
+
+        const touch = e.changedTouches[0]
+        const target = touch ? getSquareFromPoint(touch.clientX, touch.clientY) : null
+
+        if (target && target !== state.from) tryMove(state.from, target)
+
+        suppressClickRef.current = true
+        setTimeout(() => { suppressClickRef.current = false }, 500)
+    }
+
+    function handlePieceTouchCancel() {
+        touchRef.current = null
+        setDraggedPiece(null)
     }
 
     function undo() {
@@ -368,13 +424,13 @@ export default function RecordGame() {
     }
 
     return (
-        <div className="flex flex-col vertical:flex-row w-full h-full items-center vertical:items-start justify-center gap-4 vertical:gap-6 p-1">
-            <div ref={boardWrapperRef} className="w-full vertical:w-auto vertical:flex-1 min-w-0 max-w-[640px] aspect-square" style={{ maxWidth: 'min(72vh, 640px)' }}>
+        <div className="flex flex-col vertical:flex-row phoneLandscape:flex-row w-full h-full items-center vertical:items-start phoneLandscape:items-start justify-start vertical:justify-center phoneLandscape:justify-center gap-4 vertical:gap-6 p-1">
+            <div ref={boardWrapperRef} className="w-full vertical:w-auto phoneLandscape:w-auto phoneLandscape:flex-1 min-w-0 max-w-[640px] aspect-square" style={{ maxWidth: 'min(72vh, 640px)' }}>
                 {boardSize > 0 ? (
                     <div
                         ref={boardRef}
                         onContextMenu={e => e.preventDefault()}
-                        className="grid w-fit h-fit relative select-none"
+                        className="board-surface grid w-fit h-fit relative select-none"
                         style={{ gridTemplateColumns: `repeat(8, ${squareSize}px)` }}
                     >
                         {rows.map((row, rowIndex) => {
@@ -428,6 +484,10 @@ export default function RecordGame() {
                                         {piece ? (
                                             <div
                                                 onMouseDown={e => handlePieceMouseDown(e, square)}
+                                                onTouchStart={e => handlePieceTouchStart(e, square)}
+                                                onTouchMove={handlePieceTouchMove}
+                                                onTouchEnd={handlePieceTouchEnd}
+                                                onTouchCancel={handlePieceTouchCancel}
                                                 style={{
                                                     width: squareSize,
                                                     height: squareSize,
@@ -469,7 +529,7 @@ export default function RecordGame() {
                 ) : ''}
             </div>
 
-            <div className="bg-backgroundBox rounded-borderRoundness flex flex-col gap-4 p-4 w-full max-w-[500px] vertical:max-w-[420px] vertical:min-w-[360px] select-text">
+            <div className="bg-backgroundBox rounded-borderRoundness flex flex-col gap-4 p-4 w-full max-w-[500px] vertical:max-w-[420px] vertical:min-w-[360px] phoneLandscape:h-full phoneLandscape:overflow-y-auto select-text">
                 <div className="flex flex-col gap-1">
                     <h1 className="text-2xl font-extrabold">Запись игры</h1>
                     <p className="text-sm text-foregroundGrey">
