@@ -34,6 +34,24 @@ export default function Form(props: { setData: (data: Data) => void, selectGame:
 
     const shiftPressed = useRef(false)
 
+    function resizeInput() {
+        const input = inputRef.current
+        if (!input) return
+
+        // Reset the height first so the textarea can also shrink again.
+        input.style.height = "auto"
+        input.style.height = `${input.scrollHeight}px`
+    }
+
+    useEffect(() => {
+        resizeInput()
+    }, [value, selected])
+
+    useEffect(() => {
+        window.addEventListener("resize", resizeInput)
+        return () => window.removeEventListener("resize", resizeInput)
+    }, [])
+
     useEffect(() => {
         const previousDepth = localStorage.getItem('depth')
         if (!previousDepth) return
@@ -149,7 +167,7 @@ export default function Form(props: { setData: (data: Data) => void, selectGame:
 
     return (
         <form ref={formRef} onSubmit={analyze} className="flex flex-col items-center gap-4">
-            <textarea spellCheck={false} rows={1} value={value} onKeyDown={handleKeyDown} onKeyUp={handleKeyUp} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setValue(e?.currentTarget.value)} ref={inputRef} placeholder={inputPlaceholder} className="w-[85%] px-2 py-[13px] flex items-center transition-colors text-lg navTop:text-xl font-bold rounded-borderRoundness border-border hover:border-borderHighlighted focus:border-borderHighlighted border-solid border-[1px] bg-backgroundBoxBox outline-none placeholder:text-placeholder placeholder:font-normal resize-none" />
+            <textarea spellCheck={false} rows={1} value={value} onKeyDown={handleKeyDown} onKeyUp={handleKeyUp} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => { setValue(e?.currentTarget.value); resizeInput() }} ref={inputRef} placeholder={inputPlaceholder} className="w-[85%] px-2 py-[13px] flex items-center transition-colors text-lg navTop:text-xl font-bold rounded-borderRoundness border-border hover:border-borderHighlighted focus:border-borderHighlighted border-solid border-[1px] bg-backgroundBoxBox outline-none placeholder:text-placeholder placeholder:font-normal resize-none break-words overflow-y-auto min-h-[54px] max-h-[min(260px,40vh)] phoneLandscape:max-h-[min(180px,45vh)]" />
             <div className="w-[85%] flex flex-col gap-2">
                 <button type="button" className="flex flex-row gap-1 items-center justify-center w-full h-14 rounded-borderRoundness text-xl bg-backgroundBoxBox hover:bg-backgroundBoxBoxHover hover:text-foregroundHighlighted transition-colors font-bold relative" onClick={e => { e.preventDefault(); setSelecting(isSelecting => !isSelecting) }}>
                     <Image draggable={false} alt="icon" src={FORMATS[selected][1]} width={28} height={28} />
