@@ -105,7 +105,7 @@ export default function Menu() {
     ]
 
     return (
-        <div ref={menuRef} className="vertical:h-full phoneLandscape:h-full phoneLandscape:min-h-0 phoneLandscape:w-[380px] phoneLandscape:max-w-[380px] phoneLandscape:min-w-[340px] w-full max-w-[500px] pb-8 vertical:pb-0 vertical:min-h-0 min-h-[420px] navTop:min-h-[600px] select-text bg-backgroundBox rounded-borderRoundness flex-grow vertical:max-w-[500px] vertical:min-w-[400px] flex flex-col gap-4 overflow-hidden">
+        <div ref={menuRef} className={`vertical:self-start phoneLandscape:self-start ${pageState === 'default' ? "vertical:min-h-full phoneLandscape:min-h-full" : "vertical:h-full phoneLandscape:h-full phoneLandscape:min-h-0 vertical:min-h-0"} phoneLandscape:w-[380px] phoneLandscape:max-w-[380px] phoneLandscape:min-w-[340px] w-full max-w-[500px] pb-8 vertical:pb-0 min-h-[420px] navTop:min-h-[600px] select-text bg-backgroundBox rounded-borderRoundness flex-grow vertical:max-w-[500px] vertical:min-w-[400px] flex flex-col gap-4 overflow-hidden`}>
             <menu className="flex flex-row relative select-none">
                 {tabs.map((t, i) => {
                     if (!t.show) return

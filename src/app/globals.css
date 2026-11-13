@@ -91,10 +91,12 @@ html {
 }
 
 /* Use the dynamic viewport height on mobile so the layout doesn't jump
-   when the browser address bar hides or shows. */
+   when the browser address bar hides or shows. The body is a min-height
+   instead of a fixed height so the page can grow past the viewport and
+   scroll as a regular document (e.g. while typing a long PGN). */
 .app-body {
-  height: 100vh;
-  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
   overscroll-behavior-y: contain;
 }
 

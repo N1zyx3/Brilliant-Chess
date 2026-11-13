@@ -29,7 +29,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html>
-      <body className={`app-body flex navTop:flex-row flex-col items-center justify-start w-screen overflow-x-hidden ${roboto.className}`}>
+      <body className={`app-body flex navTop:flex-row flex-col items-center justify-start w-screen overflow-x-clip ${roboto.className}`}>
         {children}
       </body>
     </html>
