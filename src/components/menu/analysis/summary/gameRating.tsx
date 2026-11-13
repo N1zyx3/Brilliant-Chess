@@ -2,6 +2,7 @@ import { moveRating } from "@/engine/stockfish"
 import { avg } from "./playersAccuracy"
 import RatingBox from "./ratingBox"
 import RatingSVG from "@/components/svg/rating"
+import { useI18n } from "@/context/i18n"
 
 function topElo(elo: number) {
     const MAX_ELO = 3000
@@ -58,43 +59,45 @@ function getRatingPhase(accuracy: number[]) {
 function RatingIcon(props: { ratingPhase: {rating: moveRating|null, accuracy: string|null}, titleText: string }) {
     const { titleText, ratingPhase } = props
     const { rating, accuracy } = ratingPhase
+    const { t } = useI18n()
 
-    if (!rating || !accuracy) return <span className="text-xl" title="Not enough moves to evaluate this phase.">-</span>
+    if (!rating || !accuracy) return <span className="text-xl" title={t.common.notEnoughMoves}>-</span>
 
     return <RatingSVG draggable rating={rating} size={30} title={titleText + ': ' + accuracy} />
 }
 
 export default function GameRating(props: { reducedSummary: boolean, accuracy: { w: number, b: number }, accuracyPhases: { opening: { w: number[], b: number[] }, middlegame: { w: number[], b: number[] }, endgame: { w: number[], b: number[] } } }) {
     const { accuracy, accuracyPhases, reducedSummary } = props
+    const { t } = useI18n()
 
     return (
         <div className="w-[85%] flex flex-col items-end gap-3">
             <div className="flex flex-row w-full justify-between items-center">
-                <span className="font-bold text-foregroundGrey reduceSummary:text-lg text-base">{reducedSummary ? '' : 'Game '}Rating</span>
+                <span className="font-bold text-foregroundGrey reduceSummary:text-lg text-base">{reducedSummary ? t.summary.rating : t.summary.gameRating}</span>
                 <div className="flex flex-row reduceSummary:w-[262px] reduceSummary:min-w-[262px] min-w-[160px] w-[160px] justify-between">
                     <RatingBox fontSize={reducedSummary ? 18 : undefined} width={reducedSummary ? 64 : undefined} paddingY={reducedSummary ? 4 : undefined} white>{topElo(getRating(accuracy.w))}</RatingBox>
                     <RatingBox fontSize={reducedSummary ? 18 : undefined} width={reducedSummary ? 64 : undefined} paddingY={reducedSummary ? 4 : undefined}>{topElo(getRating(accuracy.b))}</RatingBox>
                 </div>
             </div>
             <div className="flex flex-row w-full justify-between items-center">
-                <span className="font-bold text-foregroundGrey reduceSummary:text-lg text-base">Opening</span>
+                <span className="font-bold text-foregroundGrey reduceSummary:text-lg text-base">{t.summary.opening}</span>
                 <div className="flex flex-row reduceSummary:w-[262px] w-[160px] justify-between">
-                    <div className="reduceSummary:w-20 w-16 flex items-center justify-center select-none"><RatingIcon ratingPhase={getRatingPhase(accuracyPhases.opening.w)} titleText="Opening Accuracy" /></div>
-                    <div className="reduceSummary:w-20 w-16 flex items-center justify-center select-none"><RatingIcon ratingPhase={getRatingPhase(accuracyPhases.opening.b)} titleText="Opening Accuracy" /></div>
+                    <div className="reduceSummary:w-20 w-16 flex items-center justify-center select-none"><RatingIcon ratingPhase={getRatingPhase(accuracyPhases.opening.w)} titleText={t.summary.openingAccuracy} /></div>
+                    <div className="reduceSummary:w-20 w-16 flex items-center justify-center select-none"><RatingIcon ratingPhase={getRatingPhase(accuracyPhases.opening.b)} titleText={t.summary.openingAccuracy} /></div>
                 </div>
             </div>
             <div className="flex flex-row w-full justify-between items-center">
-                <span className="font-bold text-foregroundGrey reduceSummary:text-lg text-base">Midgame</span>
+                <span className="font-bold text-foregroundGrey reduceSummary:text-lg text-base">{t.summary.midgame}</span>
                 <div className="flex flex-row reduceSummary:w-[262px] w-[160px] justify-between">
-                    <div className="reduceSummary:w-20 w-16 flex items-center justify-center select-none"><RatingIcon ratingPhase={getRatingPhase(accuracyPhases.middlegame.w)} titleText="Middlegame Accuracy" /></div>
-                    <div className="reduceSummary:w-20 w-16 flex items-center justify-center select-none"><RatingIcon ratingPhase={getRatingPhase(accuracyPhases.middlegame.b)} titleText="Middlegame Accuracy" /></div>
+                    <div className="reduceSummary:w-20 w-16 flex items-center justify-center select-none"><RatingIcon ratingPhase={getRatingPhase(accuracyPhases.middlegame.w)} titleText={t.summary.middlegameAccuracy} /></div>
+                    <div className="reduceSummary:w-20 w-16 flex items-center justify-center select-none"><RatingIcon ratingPhase={getRatingPhase(accuracyPhases.middlegame.b)} titleText={t.summary.middlegameAccuracy} /></div>
                 </div>
             </div>
             <div className="flex flex-row w-full justify-between items-center">
-                <span className="font-bold text-foregroundGrey reduceSummary:text-lg text-base">Endgame</span>
+                <span className="font-bold text-foregroundGrey reduceSummary:text-lg text-base">{t.summary.endgame}</span>
                 <div className="flex flex-row reduceSummary:w-[262px] w-[160px] justify-between">
-                    <div className="reduceSummary:w-20 w-16 flex items-center justify-center select-none"><RatingIcon ratingPhase={getRatingPhase(accuracyPhases.endgame.w)} titleText="Endgame Accuracy" /></div>
-                    <div className="reduceSummary:w-20 w-16 flex items-center justify-center select-none"><RatingIcon ratingPhase={getRatingPhase(accuracyPhases.endgame.b)} titleText="Endgame Accuracy" /></div>
+                    <div className="reduceSummary:w-20 w-16 flex items-center justify-center select-none"><RatingIcon ratingPhase={getRatingPhase(accuracyPhases.endgame.w)} titleText={t.summary.endgameAccuracy} /></div>
+                    <div className="reduceSummary:w-20 w-16 flex items-center justify-center select-none"><RatingIcon ratingPhase={getRatingPhase(accuracyPhases.endgame.b)} titleText={t.summary.endgameAccuracy} /></div>
                 </div>
             </div>
         </div>

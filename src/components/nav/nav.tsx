@@ -6,12 +6,14 @@ import { useContext, useEffect, useRef } from "react"
 import Licenses from "../svg/license"
 import Settings from "./settings/settings"
 import { ConfigContext } from "@/context/config"
+import { useI18n } from "@/context/i18n"
 import Link from "next/link"
 
 export const DONATE_URL = "https://www.paypal.com/donate/?hosted_button_id=S8SWJBNYZ2WFW"
 
 export default function Nav() {
     const configContext = useContext(ConfigContext)
+    const { t } = useI18n()
 
     const [openedMenu, setOpenedMenu] = configContext.openedMenu
     const boardMenuSettingsRef = configContext.boardMenuSettingsRef
@@ -29,7 +31,7 @@ export default function Nav() {
     }
 
     const topLinks: TopLink[] = [
-        { label: "Settings", hover: openSettings, icon: `${process.env.NEXT_PUBLIC_BASE_PATH}/images/setting.svg`, role: "button" },
+        { label: t.nav.settings, hover: openSettings, icon: `${process.env.NEXT_PUBLIC_BASE_PATH}/images/setting.svg`, role: "button" },
     ]
 
     interface BotLinks {
@@ -39,8 +41,8 @@ export default function Nav() {
     }
 
     const botLinks: BotLinks[] = [
-        { label: "Source Code", href: "https://github.com/wdeloo/Brilliant-Chess", icon: (props: {className: string}) => <GitHub class={props.className} /> },
-        { label: "Attributions", href: "/attributions", icon: (props: {className: string}) => <Licenses class={props.className} /> },
+        { label: t.nav.sourceCode, href: "https://github.com/wdeloo/Brilliant-Chess", icon: (props: {className: string}) => <GitHub class={props.className} /> },
+        { label: t.nav.attributions, href: "/attributions", icon: (props: {className: string}) => <Licenses class={props.className} /> },
     ]
 
     function openSettings() {
@@ -77,9 +79,9 @@ export default function Nav() {
                         <Image draggable={false} height={30} width={30} alt="logo" src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/logo.svg`} className="navTop:mt-[-2px]" />
                         <div className="h-fit w-fit reduceNav:block hidden">Brilliant<span className="text-sm font-light">Chess</span></div>
                     </Link>
-                    <Link title="Запись игры" draggable={false} onMouseEnter={() => setOpenedMenu(null)} href="/record" className="text-lg outline-none font-bold navTop:px-3 navTop:py-2 p-1.5 hover:bg-backgroundBoxHover hover:text-foregroundHighlighted transition-colors flex flex-row gap-2">
-                        <Image draggable={false} height={30} width={30} alt="Запись игры" src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/pgn.svg`} className="transition-colors" />
-                        <div className="h-fit w-fit reduceNav:block hidden">Запись игры</div>
+                    <Link title={t.nav.recordGame} draggable={false} onMouseEnter={() => setOpenedMenu(null)} href="/record" className="text-lg outline-none font-bold navTop:px-3 navTop:py-2 p-1.5 hover:bg-backgroundBoxHover hover:text-foregroundHighlighted transition-colors flex flex-row gap-2">
+                        <Image draggable={false} height={30} width={30} alt={t.nav.recordGame} src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/pgn.svg`} className="transition-colors" />
+                        <div className="h-fit w-fit reduceNav:block hidden">{t.nav.recordGame}</div>
                     </Link>
                     {topLinks.map((link, i) => {
                         return (

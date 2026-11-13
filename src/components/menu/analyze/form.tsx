@@ -3,26 +3,34 @@ import Arrow from "../../svg/arrow"
 import Image from "next/image"
 import { Data } from "@/context/analyze"
 import { platform } from "../menu"
+import { useI18n } from "@/context/i18n"
+import { translate } from "@/i18n"
 
-type format = [string, string, string]
+export const FORMAT_KEYS = ["chessCom", "lichessOrg", "pgn", "fen"] as const
+export const FORMAT_KINDS: ("platform" | "format")[] = ["platform", "platform", "format", "format"]
+export const FORMAT_ICONS = ["chesscom.svg", "lichess.svg", "pgn.svg", "json.svg"]
 
-export const FORMATS: format[] = [
-    ["Chess.com", `${process.env.NEXT_PUBLIC_BASE_PATH}/images/chesscom.svg`, "platform"],
-    ["Lichess.org", `${process.env.NEXT_PUBLIC_BASE_PATH}/images/lichess.svg`, "platform"],
-    ["PGN", `${process.env.NEXT_PUBLIC_BASE_PATH}/images/pgn.svg`, "format"],
-    ["FEN", `${process.env.NEXT_PUBLIC_BASE_PATH}/images/json.svg`, "format"],
-]
-
-type type = [string, string, number]
-
-export const TYPES: type[] = [
-    ["Quick", `${process.env.NEXT_PUBLIC_BASE_PATH}/images/quick.svg`, 15],
-    ["Basic", `${process.env.NEXT_PUBLIC_BASE_PATH}/images/standard.svg`, 18],
-    ["Deep", `${process.env.NEXT_PUBLIC_BASE_PATH}/images/deep.svg`, 21],
-]
+export const TYPE_KEYS = ["quick", "basic", "deep"] as const
+export const TYPE_DEPTHS = [15, 18, 21]
+export const TYPE_ICONS = ["quick.svg", "standard.svg", "deep.svg"]
 
 export default function Form(props: { setData: (data: Data) => void, selectGame: (username: string, platform: platform ) => void, depth: [number, (depth: number) => void], selected: [number, (selected: number) => void] }) {
     const { setData, selectGame } = props
+    const { t } = useI18n()
+
+    const formats = FORMAT_KEYS.map((key, i) => ({
+        key,
+        label: t.form.formats[key],
+        icon: `${process.env.NEXT_PUBLIC_BASE_PATH}/images/${FORMAT_ICONS[i]}`,
+        kind: FORMAT_KINDS[i],
+    }))
+
+    const types = TYPE_KEYS.map((key, i) => ({
+        key,
+        label: t.form.types[key],
+        icon: `${process.env.NEXT_PUBLIC_BASE_PATH}/images/${TYPE_ICONS[i]}`,
+        depth: TYPE_DEPTHS[i],
+    }))
 
     const [isSelecting, setSelecting] = useState(false)
     const [value, setValue] = useState("")
@@ -58,7 +66,7 @@ export default function Form(props: { setData: (data: Data) => void, selectGame:
 
         const previousDepthNumber = Number(previousDepth)
 
-        if (TYPES.some(type => type[2] === previousDepthNumber)) {
+        if (TYPE_DEPTHS.includes(previousDepthNumber)) {
             setDepth(previousDepthNumber)
         } else {
             setDepth(18)
@@ -72,7 +80,7 @@ export default function Form(props: { setData: (data: Data) => void, selectGame:
 
         const previousSelectedNumber = Number(previousSelected)
 
-        if (FORMATS[previousSelectedNumber] != null) {
+        if (previousSelectedNumber >= 0 && previousSelectedNumber < FORMAT_KEYS.length) {
             select(previousSelectedNumber)
         } else {
             select(0)
@@ -86,12 +94,12 @@ export default function Form(props: { setData: (data: Data) => void, selectGame:
     }, [])
 
     useEffect(() => {
-        switch (FORMATS[selected][0]) {
-            case "Chess.com":
+        switch (formats[selected].key) {
+            case "chessCom":
                 const previousChesscomUserName = localStorage.getItem('chesscom') ?? ''
                 setValue(previousChesscomUserName)
                 break
-            case "Lichess.org":
+            case "lichessOrg":
                 const previousLichessorgUserName = localStorage.getItem('lichessorg') ?? ''
                 setValue(previousLichessorgUserName)
                 break
@@ -103,19 +111,19 @@ export default function Form(props: { setData: (data: Data) => void, selectGame:
     function analyze(e: React.FormEvent) {
         e.preventDefault()
 
-        switch (FORMATS[selected][0]) {
-            case "Chess.com":
+        switch (formats[selected].key) {
+            case "chessCom":
                 localStorage.setItem("chesscom", value)
                 selectGame(value, "chessCom")
                 break
-            case "Lichess.org":
+            case "lichessOrg":
                 localStorage.setItem("lichessorg", value)
                 selectGame(value, "lichessOrg")
                 break
-            case "PGN":
+            case "pgn":
                 setData({ format: "pgn", string: value })
                 break
-            case "FEN":
+            case "fen":
                 setData({ format: "fen", string: value })
                 break
         }
@@ -154,48 +162,48 @@ export default function Form(props: { setData: (data: Data) => void, selectGame:
     }
 
     function isAPlatform(i: number) {
-        return FORMATS[i][2] === "platform"
+        return FORMAT_KINDS[i] === "platform"
     }
 
     const inputPlaceholder = isAPlatform(selected) ?
-        `Enter your ${FORMATS[selected][0]} username` :
-        `Paste your ${FORMATS[selected][0]} here`
+        translate(t.form.usernamePlaceholder, { format: formats[selected].label }) :
+        translate(t.form.pastePlaceholder, { format: formats[selected].label })
 
     const analyzeValue = isAPlatform(selected) ?
-        "List games" :
-        "Analyze"
+        t.common.listGames :
+        t.common.analyze
 
     return (
         <form ref={formRef} onSubmit={analyze} className="flex flex-col items-center gap-4">
             <textarea spellCheck={false} rows={1} value={value} onKeyDown={handleKeyDown} onKeyUp={handleKeyUp} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => { setValue(e?.currentTarget.value); resizeInput() }} ref={inputRef} placeholder={inputPlaceholder} className="w-[85%] px-2 py-[13px] flex items-center transition-colors text-lg navTop:text-xl font-bold rounded-borderRoundness border-border hover:border-borderHighlighted focus:border-borderHighlighted border-solid border-[1px] bg-backgroundBoxBox outline-none placeholder:text-placeholder placeholder:font-normal resize-none break-words overflow-hidden min-h-[54px]" />
             <div className="w-[85%] flex flex-col gap-2">
                 <button type="button" className="flex flex-row gap-1 items-center justify-center w-full h-14 rounded-borderRoundness text-xl bg-backgroundBoxBox hover:bg-backgroundBoxBoxHover hover:text-foregroundHighlighted transition-colors font-bold relative" onClick={e => { e.preventDefault(); setSelecting(isSelecting => !isSelecting) }}>
-                    <Image draggable={false} alt="icon" src={FORMATS[selected][1]} width={28} height={28} />
-                    {FORMATS[selected][0]}
+                    <Image draggable={false} alt="icon" src={formats[selected].icon} width={28} height={28} />
+                    {formats[selected].label}
                     <div className={`absolute h-full right-6 top-0 flex flex-row items-center ${isSelecting ? "" : "rotate-180"}`}><Arrow class="fill-foregroundGrey" /></div>
                 </button>
                 <div className="flex flex-col gap-2" style={{ display: isSelecting ? "" : "none" }}>
-                    <h6 className="mt-2 font-bold flex flex-row gap-1"><Image alt="depth" src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/formats.svg`} width={18} height={18} />Game Formats</h6>
+                    <h6 className="mt-2 font-bold flex flex-row gap-1"><Image alt="depth" src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/formats.svg`} width={18} height={18} />{t.common.gameFormats}</h6>
                     <ul className="grid grid-cols-2 gap-3">
-                        {FORMATS.map((format, i) => {
+                        {formats.map((format, i) => {
                             return (
                                 <li key={i}>
                                     <button type="button" onClick={() => changeSelected(i)} style={{ gap: i !== 0 ? '.4rem' : '0' }} className="flex flex-row items-center justify-center h-12 w-full hover:text-foregroundHighlighted rounded-borderRoundness text-md bg-backgroundBoxBox hover:bg-backgroundBoxBoxHover transition-colors font-bold">
-                                        <Image draggable={false} alt="format" src={format[1]} width={150} height={0} className="h-6 w-fit" priority />
-                                        {format[0]}
+                                        <Image draggable={false} alt="format" src={format.icon} width={150} height={0} className="h-6 w-fit" priority />
+                                        {format.label}
                                     </button>
                                 </li>
                             )
                         })}
                     </ul>
-                    <h6 className="mt-2 font-bold flex flex-row gap-2"><Image priority alt="depth" src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/type.svg`} width={20} height={0} />Analysis Type</h6>
+                    <h6 className="mt-2 font-bold flex flex-row gap-2"><Image priority alt="depth" src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/type.svg`} width={20} height={0} />{t.common.analysisType}</h6>
                     <ul className="grid grid-cols-3 gap-3">
-                        {TYPES.map((type, i) => {
+                        {types.map((type, i) => {
                             return (
                                 <li key={i}>
-                                    <button title={`Depth: ${type[2]}`} type="button" onClick={() => changeDepth(type[2])} style={{ gap: i !== 0 ? '.4rem' : '0' }} className={`flex flex-row items-center justify-center h-10 w-full hover:text-foregroundHighlighted rounded-borderRoundness text-md bg-backgroundBoxBox hover:bg-backgroundBoxBoxHover transition-colors font-bold border-backgroundBoxBoxHighlighted ${depth === type[2] ? "border-[2px]" : ""}`}>
-                                        <Image draggable={false} alt="format" src={type[1]} width={150} height={0} className="h-5 w-fit" priority />
-                                        {type[0]}
+                                    <button title={translate("{label}: {depth}", { label: t.common.depth, depth: type.depth })} type="button" onClick={() => changeDepth(type.depth)} style={{ gap: i !== 0 ? '.4rem' : '0' }} className={`flex flex-row items-center justify-center h-10 w-full hover:text-foregroundHighlighted rounded-borderRoundness text-md bg-backgroundBoxBox hover:bg-backgroundBoxBoxHover transition-colors font-bold border-backgroundBoxBoxHighlighted ${depth === type.depth ? "border-[2px]" : ""}`}>
+                                        <Image draggable={false} alt="format" src={type.icon} width={150} height={0} className="h-5 w-fit" priority />
+                                        {type.label}
                                     </button>
                                 </li>
                             )

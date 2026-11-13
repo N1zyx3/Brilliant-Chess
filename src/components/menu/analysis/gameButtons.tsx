@@ -6,11 +6,13 @@ import Play from "../../svg/play";
 import SkipGame from "../../svg/skipGame";
 import Pause from "../../svg/pause";
 import { AnalyzeContext } from "@/context/analyze";
+import { useI18n } from "@/context/i18n";
 
 export default function GameButtons() {
     const [playPauseHover, setPlayPauseHover] = useState(false)
 
     const analyzeContext = useContext(AnalyzeContext)
+    const { t } = useI18n()
 
     const [playing] = analyzeContext.playing
     const [moveNumber] = analyzeContext.moveNumber
@@ -48,25 +50,25 @@ export default function GameButtons() {
 
     return (
         <div className="w-[85%] rounded-borderRoundness p-1 flex flex-row justify-around items-center gap-1">
-            <button type="button" aria-label="First move" onClick={firstMove} className="group p-2 flex items-center justify-center">
+            <button type="button" aria-label={t.common.firstMove} onClick={firstMove} className="group p-2 flex items-center justify-center">
                 <SkipGame class="h-[40px] rotate-180 fill-foregroundGrey transition-colors group-hover:fill-foregroundHighlighted" />
             </button>
-            <button type="button" aria-label="Previous move" onClick={previousMove} className="group p-2 flex items-center justify-center">
+            <button type="button" aria-label={t.common.previousMove} onClick={previousMove} className="group p-2 flex items-center justify-center">
                 <NextMove class="h-[24px] rotate-180 fill-foregroundGrey transition-colors group-hover:fill-foregroundHighlighted" />
             </button>
             {!playing ? (
-                <button type="button" aria-label="Play" onClick={play} onMouseEnter={() => setPlayPauseHover(true)} onMouseLeave={() => setPlayPauseHover(false)} className="p-2 flex items-center justify-center">
+                <button type="button" aria-label={t.common.play} onClick={play} onMouseEnter={() => setPlayPauseHover(true)} onMouseLeave={() => setPlayPauseHover(false)} className="p-2 flex items-center justify-center">
                     <Play class={`h-[24px] transition-colors pl-1 ${playPauseHover ? 'fill-foregroundHighlighted' : 'fill-foregroundGrey'}`} />
                 </button>
             ) : (
-                <button type="button" aria-label="Pause" onClick={pause} onMouseEnter={() => setPlayPauseHover(true)} onMouseLeave={() => setPlayPauseHover(false)} className="p-2 flex items-center justify-center">
+                <button type="button" aria-label={t.common.pause} onClick={pause} onMouseEnter={() => setPlayPauseHover(true)} onMouseLeave={() => setPlayPauseHover(false)} className="p-2 flex items-center justify-center">
                     <Pause class={`h-[24px] transition-colors pr-1 ${playPauseHover ? 'fill-foregroundHighlighted' : 'fill-foregroundGrey'}`} />
                 </button>
             )}
-            <button type="button" aria-label="Next move" onClick={nextMove} className="group p-2 flex items-center justify-center">
+            <button type="button" aria-label={t.common.nextMove} onClick={nextMove} className="group p-2 flex items-center justify-center">
                 <NextMove class="h-[24px] fill-foregroundGrey transition-colors group-hover:fill-foregroundHighlighted" />
             </button>
-            <button type="button" aria-label="Last move" onClick={lastMove} className="group p-2 flex items-center justify-center">
+            <button type="button" aria-label={t.common.lastMove} onClick={lastMove} className="group p-2 flex items-center justify-center">
                 <SkipGame class="h-[40px] fill-foregroundGrey transition-colors group-hover:fill-foregroundHighlighted" />
             </button>
         </div>

@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next"
 import "./globals.css"
 
 import { Roboto } from 'next/font/google'
+import I18nContextProvider from "@/context/i18n"
+import { translations } from "@/i18n"
 
 const roboto = Roboto({
   subsets: ['latin'],
@@ -9,9 +11,9 @@ const roboto = Roboto({
 })
 
 export const metadata: Metadata = {
-  title: "Brilliant Chess - Free Chess Analyzer",
-  description: "Analyze your chess games and improve your skills completely free.",
-  keywords: ["chess", "chess analysis", "free chess analyzer", "free chess.com analyzer", "analyze chess for free", "analyze chess games", "brilliant move chess", "brilliant chess", "brilliant-chess"],
+  title: translations.en.metadata.title,
+  description: translations.en.metadata.description,
+  keywords: translations.en.metadata.keywords,
   authors: [{ name: 'Delo', url: "https://github.com/wdeloo" }],
   applicationName: "Brilliant Chess",
 
@@ -28,9 +30,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html>
+    <html lang="en">
       <body className={`app-body flex navTop:flex-row flex-col items-center justify-start w-screen overflow-x-clip ${roboto.className}`}>
-        {children}
+        <I18nContextProvider>{children}</I18nContextProvider>
       </body>
     </html>
   )

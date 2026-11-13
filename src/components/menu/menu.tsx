@@ -2,6 +2,7 @@
 
 import { useContext, useEffect, useRef, useState } from "react"
 import { AnalyzeContext } from "@/context/analyze"
+import { useI18n } from "@/context/i18n"
 
 import Lens from "../svg/lens"
 import Form from "./analyze/form"
@@ -20,6 +21,8 @@ export type platform = "chessCom" | "lichessOrg"
 
 export default function Menu() {
     const [username, setUsername] = useState<{platform: platform, username: string}>({platform: "chessCom", username: ""})
+
+    const { t } = useI18n()
 
     const [selected, select] = useState(0)
 
@@ -82,8 +85,8 @@ export default function Menu() {
 
     useEffect(() => {
         const playerNames = players.map(player => player.name) as [ string, string ]
-        setOverallGameComment(getOverallGameComment(playerNames, result))
-    }, [players, result])
+        setOverallGameComment(getOverallGameComment(playerNames, result, t.comments.overall))
+    }, [players, result, t])
 
     function stopSelecting() {
         setUsername({platform: 'chessCom', username: ''})
@@ -98,10 +101,10 @@ export default function Menu() {
     }
 
     const tabs: Tab[] = [
-        { label: `Analize${pageState === 'analyze' || pageState === 'analyzeCustom' ? ' new' : ''} Game`, state: "analyze", icon: (className: string) => <Lens class={className} size={20} />, show: true, onClick: () => { if (pageState === 'analyze' || pageState === 'analyzeCustom') setData({ format: "fen", string: "" }); if (tab === 'selectGame') stopSelecting() } },
-        { label: "Choose Game", state: "selectGame", icon: (className: string) => <Pawn class={className} size={20} />, show: tab === 'selectGame', onClick: () => { } },
-        { label: "Summary", state: "summary", icon: (className: string) => <Star class={className} size={20} />, show: pageState === 'analyze', onClick: () => { } },
-        { label: "Moves", state: 'moves', icon: (className: string) => <BoardIcon class={className} size={20} />, show: pageState === 'analyze' || pageState === "analyzeCustom", onClick: () => { } }
+        { label: pageState === 'analyze' || pageState === 'analyzeCustom' ? t.menu.analyzeNewGame : t.menu.analyzeGame, state: "analyze", icon: (className: string) => <Lens class={className} size={20} />, show: true, onClick: () => { if (pageState === 'analyze' || pageState === 'analyzeCustom') setData({ format: "fen", string: "" }); if (tab === 'selectGame') stopSelecting() } },
+        { label: t.menu.chooseGame, state: "selectGame", icon: (className: string) => <Pawn class={className} size={20} />, show: tab === 'selectGame', onClick: () => { } },
+        { label: t.menu.summary, state: "summary", icon: (className: string) => <Star class={className} size={20} />, show: pageState === 'analyze', onClick: () => { } },
+        { label: t.menu.moves, state: 'moves', icon: (className: string) => <BoardIcon class={className} size={20} />, show: pageState === 'analyze' || pageState === "analyzeCustom", onClick: () => { } }
     ]
 
     return (

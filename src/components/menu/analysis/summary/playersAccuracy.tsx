@@ -4,6 +4,7 @@ import { move, position } from "@/engine/stockfish";
 import { Dispatch, SetStateAction, useEffect } from "react";
 import RatingBox from "./ratingBox";
 import { Chess, Color } from "chess.js";
+import { useI18n } from "@/context/i18n";
 
 export interface accuracyPhases {
     opening: { w: number[], b: number[] },
@@ -62,6 +63,7 @@ function pushAccuracy(arr: { w: number[], b: number[] }, value: number, color: C
 export default function PlayersAccuracy(props: { reducedSummary: boolean, players: players, moves: move[], accuracy: [{ w: number, b: number }, Dispatch<SetStateAction<{ w: number, b: number }>>], setAccuracyPhases: Dispatch<SetStateAction<accuracyPhases>> }) {
     const { players, setAccuracyPhases, moves } = props
     const [accuracy, setAccuracy] = props.accuracy
+    const { t } = useI18n()
 
     useEffect(() => {
         const accuracies: { w: number[], b: number[] } = { w: [], b: [] }
@@ -126,7 +128,7 @@ export default function PlayersAccuracy(props: { reducedSummary: boolean, player
                 <div className="reduceSummary:w-20 w-16 flex flex-row justify-center whitespace-nowrap overflow-visible"><span>{players[1].name}</span></div>
             </div>
             <div className="flex flex-row w-full justify-between items-center">
-                <span className="font-bold text-foregroundGrey reduceSummary:text-lg text-base">Players</span>
+                <span className="font-bold text-foregroundGrey reduceSummary:text-lg text-base">{t.summary.players}</span>
                 <div className="flex flex-row reduceSummary:w-[262px] w-[160px] justify-between">
                     <div className="reduceSummary:h-20 reduceSummary:w-20 h-16 w-16 flex flex-row justify-center items-end bg-backgroundProfileWhite rounded-borderRoundness">
                         <Profile width={props.reducedSummary ? 58 : 70} height={props.reducedSummary ? 58 : 70} class="fill-foregroundProfileWhite" />
@@ -137,7 +139,7 @@ export default function PlayersAccuracy(props: { reducedSummary: boolean, player
                 </div>
             </div>
             <div className="flex flex-row w-full justify-between items-center">
-                <span className="font-bold text-foregroundGrey reduceSummary:text-lg text-base">Accuracy</span>
+                <span className="font-bold text-foregroundGrey reduceSummary:text-lg text-base">{t.summary.accuracy}</span>
                 <div className="flex flex-row reduceSummary:w-[262px] w-[160px] justify-between">
                     <RatingBox fontSize={props.reducedSummary ? 18 : undefined} width={props.reducedSummary ? 64 : undefined} paddingY={props.reducedSummary ? 4 : undefined} white>{accuracy.w.toFixed(1)}</RatingBox>
                     <RatingBox fontSize={props.reducedSummary ? 18 : undefined} width={props.reducedSummary ? 64 : undefined} paddingY={props.reducedSummary ? 4 : undefined}>{accuracy.b.toFixed(1)}</RatingBox>

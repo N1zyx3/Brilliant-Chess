@@ -1,27 +1,7 @@
 import RatingSVG from "@/components/svg/rating"
 import { moveRating } from "@/engine/stockfish"
-
-const RATING_FORMATS_GUIDE = {
-    _isA_Move: 'is a _ move',
-    _isAn_Move: 'is an _ move',
-    _is_: 'is _',
-    _isAn_: 'is an _',
-    _isA_: 'is a _',
-}
-
-const RATING_FORMATS = {
-    book: RATING_FORMATS_GUIDE._isA_Move,
-    forced: RATING_FORMATS_GUIDE._is_,
-    brilliant: RATING_FORMATS_GUIDE._is_,
-    great: RATING_FORMATS_GUIDE._isA_Move,
-    best: RATING_FORMATS_GUIDE._is_,
-    excellent: RATING_FORMATS_GUIDE._is_,
-    good: RATING_FORMATS_GUIDE._is_,
-    inaccuracy: RATING_FORMATS_GUIDE._isAn_,
-    mistake: RATING_FORMATS_GUIDE._isA_,
-    miss: RATING_FORMATS_GUIDE._isA_,
-    blunder: RATING_FORMATS_GUIDE._isA_,
-}
+import { useI18n } from "@/context/i18n"
+import { translate } from "@/i18n"
 
 export function FormatEval(props: {evaluation: string[], white: boolean, smaller?: boolean, best?: boolean}) {
     const { evaluation, white, smaller, best } = props
@@ -50,6 +30,7 @@ export function FormatEval(props: {evaluation: string[], white: boolean, smaller
 
 export default function Comments(props: { comment?: string, rating?: moveRating, moveSan?: string, evaluation: string[], white: boolean, overallGameComment: string }) {
     const { comment, rating, moveSan, evaluation, white, overallGameComment } = props
+    const { t } = useI18n()
 
     if (!comment || !rating || !moveSan) {
         return (
@@ -62,7 +43,7 @@ export default function Comments(props: { comment?: string, rating?: moveRating,
             <div className="flex flex-row justify-between items-center">
                 <div className="flex flex-row items-center gap-2">
                     <RatingSVG draggable rating={rating} size={32} />
-                    <span>{moveSan} {RATING_FORMATS[rating].replace('_', rating)}</span>
+                    <span>{translate(t.comments.rating[rating], { move: moveSan })}</span>
                 </div>
                 <FormatEval evaluation={evaluation} white={white} />
             </div>

@@ -14,10 +14,11 @@ import { pushPageWarning, pushPageError } from "@/components/errors/pageErrors"
 import { ErrorsContext } from "@/context/errors"
 import { maxVertical, navTop } from "../../../tailwind.config"
 import { ConfigContext } from "@/context/config"
+import { useI18n } from "@/context/i18n"
+import { translate } from "@/i18n"
 import GameButtons from "../menu/analysis/gameButtons"
 
 // const NOT_SUPPORTED_WASM_THREADS_WARNING = ['WebAssembly threads not supported', 'The app may run slower. Try updating your browser for better performance.']
-const NOT_SUPPORTED_WASM_WARNING = ['WebAssembly not supported', 'The app may run very slow. Try updating your browser for better performance.']
 
 export type arrow = square[]
 export interface AllGameArrows { [key: number]: arrow[] }
@@ -84,6 +85,7 @@ export default function Game() {
     const analyzeContext = useContext(AnalyzeContext)
     const errorsContext = useContext(ErrorsContext)
     const configContext = useContext(ConfigContext)
+    const { t, language } = useI18n()
 
     const [players, setPlayers] = analyzeContext.players
     const [time, setTime] = analyzeContext.time
@@ -147,7 +149,7 @@ export default function Game() {
         if (!wasmThreadsSupported()) {
             if (!wasmSupported()) {
                 // Web Assembly not Supported
-                pushPageWarning(setErrors, NOT_SUPPORTED_WASM_WARNING[0], NOT_SUPPORTED_WASM_WARNING[1])
+                pushPageWarning(setErrors, t.errors.wasm.title, t.errors.wasm.description)
                 engineWorkerRef.current = new window.Worker(`${process.env.NEXT_PUBLIC_BASE_PATH}/engine/stockfish-asm.js`)
             } else {
                 // Web Assembly Threads not Supported
@@ -164,7 +166,7 @@ export default function Game() {
         const threads = navigator.hardwareConcurrency ?? 1
         const hash = Math.floor(getAproxMemory() / 4)
 
-        const errorTimeout = setTimeout(() => pushPageError(setErrors, 'The browser is having some troubles loading Stockfish', "If the app doesn't work properly try restarting the browser."), 15000);
+        const errorTimeout = setTimeout(() => pushPageError(setErrors, t.errors.stockfish.title, t.errors.stockfish.description), 15000);
         (async () => {
             await prepareStockfish(stockfish, threads, hash)
             clearTimeout(errorTimeout)
@@ -328,19 +330,17 @@ export default function Game() {
     }, [])
 
     async function handlePGN(pgn: string, depth: number) {
-        const PGN_ERROR = ['Error reading PGN', 'Please, provide a valid PGN.']
-
         setPageState('loading')
 
         if (!pgn) {
-            pushPageError(setErrors, PGN_ERROR[0], PGN_ERROR[1])
+            pushPageError(setErrors, t.errors.pgn.title, t.errors.pgn.description)
             setPageState('default')
             return
         }
 
         if (!wasmThreadsSupported()) {
             if (!wasmSupported()) {
-                pushPageWarning(setErrors, NOT_SUPPORTED_WASM_WARNING[0], NOT_SUPPORTED_WASM_WARNING[1])
+                pushPageWarning(setErrors, t.errors.wasm.title, t.errors.wasm.description)
             } else {
                 // pushPageWarning(setErrors, NOT_SUPPORTED_WASM_THREADS_WARNING[0], NOT_SUPPORTED_WASM_THREADS_WARNING[1])
             }
@@ -350,7 +350,7 @@ export default function Game() {
         if (!stockfish) return
 
         try {
-            const { metadata, moves } = await parsePGN(stockfish, pgn, depth, openings, setProgress, analyzeController.signal)
+            const { metadata, moves } = await parsePGN(stockfish, pgn, depth, openings, setProgress, analyzeController.signal, language)
 
             setTime(metadata.time)
             setPlayers(metadata.players)
@@ -366,7 +366,7 @@ export default function Game() {
         } catch (e: any) {
             switch (e.message) {
                 case 'pgn':
-                    pushPageError(setErrors, PGN_ERROR[0], PGN_ERROR[1])
+                    pushPageError(setErrors, t.errors.pgn.title, t.errors.pgn.description)
                     break
                 case 'canceled':
                     setAnalyzeController(new AbortController())
@@ -381,15 +381,13 @@ export default function Game() {
     }
 
     async function handleFEN(fen: string) {
-        const FEN_ERROR = ['Error reading FEN', 'Please, provide a valid FEN.']
-
         let move
         try {
             move = await new Promise<move>(async (resolve, reject) => {
                 setPageState('loading')
 
                 setTime(0)
-                setPlayers([{ name: 'White', elo: '?' }, { name: 'Black', elo: '?' }])
+                setPlayers([{ name: t.common.white, elo: '?' }, { name: t.common.black, elo: '?' }])
                 setWhite(true)
                 setPlaying(false)
                 setMoveNumber(0)
@@ -441,7 +439,7 @@ export default function Game() {
         } catch (e: any) {
             switch (e.message) {
                 case 'fen':
-                    pushPageError(setErrors, FEN_ERROR[0], FEN_ERROR[1])
+                    pushPageError(setErrors, t.errors.fen.title, t.errors.fen.description)
                     break
                 case 'canceled':
                     setAnalyzeController(new AbortController())
@@ -602,7 +600,7 @@ export default function Game() {
             const chess = new Chess(previousFen)
             const move = chess.move(movement)
 
-            const analyzedMovement = await parseMove(stockfish, depth, move, chess, previousStaticEvals, previousBestMoveSan, previousSacrifice, openings, handleAbort, signal)
+            const analyzedMovement = await parseMove(stockfish, depth, move, chess, previousStaticEvals, previousBestMoveSan, previousSacrifice, openings, handleAbort, signal, language)
             resolve(analyzedMovement)
         })
 
@@ -637,9 +635,9 @@ export default function Game() {
             if (hours > 2) {
                 const days = getDays(hours)
                 if (days > 2) {
-                    return `${days} days`
+                    return translate(t.common.days, { count: days })
                 }
-                return `${hours} ${hours > 1 ? 'hours' : 'hour'}`
+                return translate(hours > 1 ? t.common.hours : t.common.hour, { count: hours })
             }
             return `${toTwoDigits(minutes)}:${toTwoDigits(restSeconds)}`
         }

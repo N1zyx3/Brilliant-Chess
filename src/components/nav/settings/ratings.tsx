@@ -1,5 +1,6 @@
 import { capitalizeFirst } from "@/components/menu/analyze/selectChessCom"
 import { ConfigContext, defaultUsedRatings, usedRatings } from "@/context/config"
+import { useI18n } from "@/context/i18n"
 import { useContext, useEffect } from "react"
 import { boardThemes } from "./themes"
 import { QUEEN, WHITE } from "chess.js"
@@ -46,6 +47,7 @@ function unserializeRatings(serializedUsedRatings: string) {
 
 export default function Ratings() {
     const configContext = useContext(ConfigContext)
+    const { t } = useI18n()
     
     const [usedRatings, setUsedRatings] = configContext.usedRatings
     const [boardTheme] = configContext.boardTheme
@@ -85,7 +87,7 @@ export default function Ratings() {
 
     return (
         <section>
-            <h1 className="block bg-backgroundBoxBox font-bold text-nowrap p-3 text-foreground">Ratings</h1>
+            <h1 className="block bg-backgroundBoxBox font-bold text-nowrap p-3 text-foreground">{t.settings.ratings}</h1>
             <button onClick={toggleHighlightByRating} type="button" className="flex flex-row gap-2 items-center hover:text-foregroundHighlighted hover:bg-black transition-colors w-full relative p-2">
                 <div className="grid grid-cols-2 w-fit">
                     {Array.from({ length: 4 }).map((_, i) => {
@@ -107,7 +109,7 @@ export default function Ratings() {
                         )
                     })}
                 </div>
-                <span className="font-bold text-lg">Highlight by rating</span>
+                <span className="font-bold text-lg">{t.settings.highlightByRating}</span>
                 <div style={{backgroundColor: "var(--foreground)", display: highlightByRating ? '' : 'none'}} className="w-3 h-3 rounded-full absolute right-3" />
             </button>
             {ratings.map((rating, i) => {
@@ -125,7 +127,7 @@ export default function Ratings() {
                 return (
                     <button onClick={toggleRating} type="button" key={i} className="flex flex-row gap-2 items-center hover:text-foregroundHighlighted hover:bg-black transition-colors w-full relative p-2">
                         <RatingSVG rating={rating} size={35} className="w-[40px] h-[40px] flex justify-center items-center" />
-                        <span className="font-bold text-lg">{capitalizeFirst(rating)}</span>
+                        <span className="font-bold text-lg">{t.ratings[rating]}</span>
                         <div style={{backgroundColor: color, display: usedRatings[rating as keyof typeof usedRatings] ? '' : 'none'}} className="w-3 h-3 rounded-full absolute right-3" />
                     </button>
                 )

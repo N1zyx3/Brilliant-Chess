@@ -1,4 +1,5 @@
 import { ConfigContext } from "@/context/config"
+import { useI18n } from "@/context/i18n"
 import { useContext, useEffect, useState } from "react"
 import { boardThemes } from "./themes"
 import { BISHOP, ROOK, WHITE } from "chess.js"
@@ -10,6 +11,7 @@ export default function Moves() {
     const [animateMovesMoved, setAnimateMovesMoved] = useState(false)
 
     const configContext = useContext(ConfigContext)
+    const { t } = useI18n()
 
     const [boardTheme] = configContext.boardTheme
     const [showLegalMoves, setShowLegalMoves] = configContext.showLegalMoves
@@ -85,7 +87,7 @@ export default function Moves() {
     return (
         <div>
             <section>
-            <h1 className="block bg-backgroundBoxBox font-bold text-nowrap p-3 text-foreground">Moves</h1>
+            <h1 className="block bg-backgroundBoxBox font-bold text-nowrap p-3 text-foreground">{t.settings.moves}</h1>
                 <button onClick={toggleShowLegalMoves} type="button" className="flex flex-row gap-2 items-center hover:text-foregroundHighlighted hover:bg-black transition-colors w-full relative p-2">
                     <div className="grid grid-cols-2 w-fit">
                         {Array.from({ length: 4 }).map((_, i) => {
@@ -105,7 +107,7 @@ export default function Moves() {
                             )
                         })}
                     </div>
-                    <span className="font-bold text-lg">Show legal moves</span>
+                    <span className="font-bold text-lg">{t.settings.showLegalMoves}</span>
                     <div style={{backgroundColor: "var(--foreground)", display: showLegalMoves ? '' : 'none'}} className="w-3 h-3 rounded-full absolute right-3" />
                 </button>
                 <button onClick={toggleAnimateMoves} type="button" className="flex flex-row gap-2 items-center hover:text-foregroundHighlighted hover:bg-black transition-colors w-full relative p-2">
@@ -127,7 +129,7 @@ export default function Moves() {
                             )
                         })}
                     </div>
-                    <span className="font-bold text-lg">Animate moves</span>
+                    <span className="font-bold text-lg">{t.settings.animateMoves}</span>
                     <div style={{backgroundColor: "var(--foreground)", display: animateMoves ? '' : 'none'}} className="w-3 h-3 rounded-full absolute right-3" />
                 </button>
                 <button onClick={toggleBoardSounds} type="button" className="flex flex-row gap-2 items-center hover:text-foregroundHighlighted hover:bg-black transition-colors w-full relative p-2">
@@ -135,7 +137,7 @@ export default function Moves() {
                         <SoundMax display={boardSounds} size={35} />
                         <SoundMute display={!boardSounds} size={35} />
                     </div>
-                    <span className="font-bold text-lg">Board sounds</span>
+                    <span className="font-bold text-lg">{t.settings.boardSounds}</span>
                     <div style={{backgroundColor: "var(--foreground)", display: boardSounds ? '' : 'none'}} className="w-3 h-3 rounded-full absolute right-3" />
                 </button>
             </section>

@@ -5,11 +5,8 @@ import { pushPageError } from "@/components/errors/pageErrors"
 import { Chess } from "chess.js"
 import Files from "@/components/svg/files"
 import { ErrorsContext } from "@/context/errors"
-
-export const GAMES_ERROR = ["Error fetching games", "Check your internet connection or try again later."]
-export const USER_ERROR = ["User not found", "Check your spelling or your internet connection."]
-
-export const API_BLOCKING_ERROR = ["Server might block excesive requests", "Slow down your request rate or wait before you try again."]
+import { useI18n } from "@/context/i18n"
+import { translate } from "@/i18n"
 
 interface Game {
     url: string
@@ -46,22 +43,8 @@ interface Game {
 
 const PLAYER_URL = 'https://www.chess.com/member/'
 
-export function getMonthName(month: number) {
-    switch (month) {
-        case 1: return 'January'
-        case 2: return 'February'
-        case 3: return 'March'
-        case 4: return 'April'
-        case 5: return 'May'
-        case 6: return 'June'
-        case 7: return 'July'
-        case 8: return 'August'
-        case 9: return 'September'
-        case 10: return 'October'
-        case 11: return 'November'
-        case 12: return 'December'
-        default: return ''
-    }
+export function getMonthName(month: number, locale: string) {
+    return new Intl.DateTimeFormat(locale, { month: 'long', timeZone: 'UTC' }).format(new Date(2020, month - 1, 1))
 }
 
 export function capitalizeFirst(string: string) {
@@ -70,6 +53,8 @@ export function capitalizeFirst(string: string) {
 
 export function Loading(props: {whatIsLoading: string, abort: () => void}) {
     const [ellipsis, setEllipsis] = useState('')
+
+    const { t } = useI18n()
 
     const ellipsisRef = useRef(ellipsis)
 
@@ -98,9 +83,9 @@ export function Loading(props: {whatIsLoading: string, abort: () => void}) {
                             <div className="w-40 flex flex-col items-center gap-4">
                                 <Files className="animate-[pulse_1.25s_cubic-bezier(0.4,_0,_0.6,_1)_infinite;] scale-x-[-1]" size={60} />
                                 <span className="text-xl text-foreground font-bold">{props.whatIsLoading}</span>
-                                <span className="w-full ml-14">Fetching api{ellipsis}</span>
+                                <span className="w-full ml-14">{t.common.fetchingApi}{ellipsis}</span>
                             </div>
-                            <button onClick={props.abort} className="hover:text-foreground transition-colors" type="button">Cancel</button>
+                            <button onClick={props.abort} className="hover:text-foreground transition-colors" type="button">{t.common.cancel}</button>
                         </div>
                     </div>
                 </div>
@@ -109,6 +94,8 @@ export function Loading(props: {whatIsLoading: string, abort: () => void}) {
 
 export function SimpleLoading(props: {whatIsLoading: string}) {
     const [ellipsis, setEllipsis] = useState('')
+
+    const { t } = useI18n()
 
     const ellipsisRef = useRef(ellipsis)
 
@@ -132,7 +119,7 @@ export function SimpleLoading(props: {whatIsLoading: string}) {
 
     return (
         <div className="font-extrabold text-2xl animate-[pulse_1.25s_cubic-bezier(0.4,_0,_0.6,_1)_infinite;] w-48 my-4 m-auto">
-            Loading {props.whatIsLoading}{ellipsis}
+            {translate(t.common.loadingWhat, { what: props.whatIsLoading })}{ellipsis}
         </div>
     )
 }
@@ -151,16 +138,18 @@ interface gameInfo {
 export function GamesUI(props: { gamesInfo: gameInfo[], loading: boolean, username: string, setData: (data: Data) => void, depth: number }) {
     const { gamesInfo, loading, username, setData } = props
 
+    const { t, locale } = useI18n()
+
     return (
         <>
-            {loading ? <SimpleLoading whatIsLoading="games" /> : null}
+            {loading ? <SimpleLoading whatIsLoading={t.common.games} /> : null}
             <div className="w-full overflow-auto max-h-[400px]">
                 <table className="w-full">
                     <thead style={{display: loading ? 'none' : ''}}>
                         <tr>
-                            <th className="py-2 text-left pl-8">Players</th>
-                            <th className="py-2 text-left pl-3 pr-4">Result</th>
-                            <th className="py-2 text-left pr-4 notFullDate:pr-8"><span className="notFullDate:block hidden">Date</span><span className="notFullDate:hidden block">Day</span></th>
+                            <th className="py-2 text-left pl-8">{t.common.players}</th>
+                            <th className="py-2 text-left pl-3 pr-4">{t.common.result}</th>
+                            <th className="py-2 text-left pr-4 notFullDate:pr-8"><span className="notFullDate:block hidden">{t.common.date}</span><span className="notFullDate:hidden block">{t.common.day}</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -175,9 +164,11 @@ export function GamesUI(props: { gamesInfo: gameInfo[], loading: boolean, userna
                             const isLoss = (whiteWon && whiteName.toLowerCase() !== username.toLowerCase()) || (blackWon && blackName.toLowerCase() !== username.toLowerCase())
 
                             const date = new Date(timestamp)
+                            const dateParts = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).formatToParts(date)
+                            const timeClassKey = timeClass.toLowerCase() as keyof typeof t.timeClasses
 
                             return (
-                                <tr title={`Time Class: ${capitalizeFirst(timeClass)}`} onClick={() => setData({format: 'pgn', string: pgn })} className="border-b-[1px] cursor-pointer select-none border-border transition-colors hover:bg-backgroundBoxHover" key={i}>
+                                <tr title={translate("{label}: {value}", { label: t.common.timeClass, value: t.timeClasses[timeClassKey] ?? capitalizeFirst(timeClass) })} onClick={() => setData({format: 'pgn', string: pgn })} className="border-b-[1px] cursor-pointer select-none border-border transition-colors hover:bg-backgroundBoxHover" key={i}>
                                     <td className="text-base flex flex-col py-4 w-60 overflow-hidden pl-8">
                                         <div className="flex flex-row items-center gap-2"><div className={`h-4 min-h-4 w-4 min-w-4 bg-evaluationBarWhite rounded-borderRoundness ${whiteWon ? 'border-[3px] border-winGreen' : ''}`} />{whiteName} ({whiteElo})</div>
                                         <div className="flex flex-row items-center gap-2"><div className={`h-4 w-4 bg-evaluationBarBlack rounded-borderRoundness ${blackWon ? 'border-[3px] border-winGreen' : ''}`} />{blackName} ({blackElo})</div>
@@ -190,7 +181,11 @@ export function GamesUI(props: { gamesInfo: gameInfo[], loading: boolean, userna
                                     </td>
                                     <td className="py-4 pr-4 notFullDate:pr-8 text-nowrap text-sm">
                                         <div className="flex flex-row items-baseline">
-                                            <span className="hidden notFullDate:block">{getMonthName(date.getMonth() + 1).slice(0, 3)} </span><span className="font-bold text-lg ml-1">{date.getDate()}</span><span className="hidden notFullDate:block">, {date.getFullYear()}</span>
+                                            {dateParts.map((part, index) => (
+                                                part.type === 'day' ?
+                                                    <span key={index} className="font-bold text-lg ml-1">{part.value}</span> :
+                                                    <span key={index}>{part.value}</span>
+                                            ))}
                                         </div>
                                     </td>
                                 </tr>
@@ -211,6 +206,7 @@ function Games(props: { url: string, username: string, depth: number, unSelect: 
 
     const errorsContext = useContext(ErrorsContext)
     const analyzeContext = useContext(AnalyzeContext)
+    const { t } = useI18n()
 
     const setErrors = errorsContext.errors[1]
     const setData = analyzeContext.data[1]
@@ -259,14 +255,14 @@ function Games(props: { url: string, username: string, depth: number, unSelect: 
                 setGamesInfo(newGamesInfo)
             } catch {
                 unSelect()
-                await pushPageError(setErrors, GAMES_ERROR[0], GAMES_ERROR[1])
+                await pushPageError(setErrors, t.errors.games.title, t.errors.games.description)
             }
         })()
     }, [])
 
     if (gamesInfo.length === 0 && !loading) {
         return (
-            <div className="text-center font-bold text-2xl my-4">No games found in this month...</div>
+            <div className="text-center font-bold text-2xl my-4">{t.common.noGames}</div>
         )
     }
 
@@ -282,6 +278,9 @@ export default function SelectChessComGame(props: { username: string, depth: num
     const [loading, setLoading] = useState(true)
 
     const errorsContext = useContext(ErrorsContext)
+    const { t, locale } = useI18n()
+
+    const [gamesTitleBefore, gamesTitleAfter] = t.selectGame.gamesTitle.split("{username}")
 
     const setErrors = errorsContext.errors[1]
 
@@ -308,22 +307,22 @@ export default function SelectChessComGame(props: { username: string, depth: num
                 setDates(newDates)
             } catch {
                 stopSelecting()
-                await pushPageError(setErrors, USER_ERROR[0], USER_ERROR[0])
+                await pushPageError(setErrors, t.errors.user.title, t.errors.user.description)
             }
         })()
     }, [username])
 
     return (
         <div className={`overflow-x-hidden overflow-y-auto ${loading ? "flex flex-col justify-center flex-grow" : ''}`}>
-            <h1 style={{display: loading ? 'none' : ''}} className="text-2xl py-4 px-8 sticky text-foreground"><a target="_blank" href={`${PLAYER_URL}${username}`} className="hover:underline text-backgroundBoxBoxHighlightedHover text-3xl font-bold">{username}</a>&apos;s games</h1>
+            <h1 style={{display: loading ? 'none' : ''}} className="text-2xl py-4 px-8 sticky text-foreground">{gamesTitleBefore}<a target="_blank" href={`${PLAYER_URL}${username}`} className="hover:underline text-backgroundBoxBoxHighlightedHover text-3xl font-bold">{username}</a>{gamesTitleAfter ?? ''}</h1>
             <hr style={{display: loading ? 'none' : ''}} className="border-border" />
             <div className="flex flex-col w-full">
-                {loading ? <Loading whatIsLoading="Archives" abort={stopSelecting} /> : null}
+                {loading ? <Loading whatIsLoading={t.common.archives} abort={stopSelecting} /> : null}
                 {dates.map((date, i) => {
                     return (
                         <div className="w-full" key={i}>
                             <button onClick={() => toggleSelected(i)} onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(NaN)} type="button" className={`${hovered === i || selected === i ? 'text-foregroundHighlighted' : 'text-foregroundGrey'} hover:bg-backgroundBoxHover w-full tracking-wide transition-colors text-2xl px-8 py-4 flex flex-row justify-between items-center`}>
-                                <span><b>{date.year}</b> {getMonthName(Number(date.month))}</span>
+                                <span><b>{date.year}</b> {getMonthName(Number(date.month), locale)}</span>
                                 <div style={{ opacity: hovered === i || selected === i ? '100' : '0', transform: `rotate(${selected !== i ? '180deg' : '0'})` }} className="transition-opacity"><Arrow class="fill-foregroundHighlighted" /></div>
                             </button>
                             {selected === i ?

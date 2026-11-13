@@ -6,6 +6,7 @@ import { WHITE } from "chess.js"
 import GameChart from "../gameChart"
 import RatingSVG from "@/components/svg/rating"
 import { getMoves } from "@/components/game/game"
+import { useI18n } from "@/context/i18n"
 
 export const RATING_TEXT_COLORS = {
     forced: "",
@@ -43,6 +44,7 @@ export function getLastBookMove(moves: move[]) {
 
 export default function Moves(props: { moves: move[], overallGameComment: string, container: HTMLElement, moveNumber: number, setMoveNumber: (moveNumber: number) => void, setAnimation: (animation: boolean) => void, setForward: (forward: boolean) => void, customLine: CustomLine, returnedToNormalGame: square[] | null, analyzingMove: boolean }) {
     const { moves, overallGameComment, container, moveNumber, setMoveNumber, setAnimation, setForward, customLine, returnedToNormalGame, analyzingMove } = props
+    const { t } = useI18n()
 
     const [movesHeight, setMovesHeight] = useState(0)
 
@@ -151,7 +153,7 @@ export default function Moves(props: { moves: move[], overallGameComment: string
                 <div className="w-[85%] font-extrabold text-highlightBest mx-auto flex flex-row items-center gap-2 py-2">
                     <FormatEval best smaller evaluation={previousMove?.previousStaticEvals?.[0] ?? ["cp", "0"]} white={(previousMove?.color ?? WHITE) === WHITE} />
                     <RatingSVG rating="best" size={22} />
-                    {previousMove?.bestMoveSan} is best
+                    {previousMove?.bestMoveSan} {t.common.bestMoveSuffix}
                 </div>
             </div>
             <ul style={{height: (movesHeight || '100%')}} ref={moveListRef} className="gap-y-1 overflow-y-auto overflow-x-hidden w-[85%] select-none flex flex-col">

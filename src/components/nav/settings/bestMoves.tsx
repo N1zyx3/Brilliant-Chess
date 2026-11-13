@@ -1,4 +1,5 @@
 import { ConfigContext } from "@/context/config"
+import { useI18n } from "@/context/i18n"
 import { useContext, useEffect } from "react"
 import { boardThemes } from "./themes"
 import { Arrow } from "@/components/game/board"
@@ -7,6 +8,7 @@ import { QUEEN, WHITE } from "chess.js"
 
 export default function BestMoves() {
     const configContext = useContext(ConfigContext)
+    const { t } = useI18n()
 
     const [boardTheme] = configContext.boardTheme
     const [showArrows, setShowArrows] = configContext.showArrows
@@ -54,7 +56,7 @@ export default function BestMoves() {
 
     return (
         <section>
-            <h1 className="block bg-backgroundBoxBox font-bold text-nowrap p-3 text-foreground">Best Moves</h1>
+            <h1 className="block bg-backgroundBoxBox font-bold text-nowrap p-3 text-foreground">{t.settings.bestMoves}</h1>
             <button onClick={toggleShowArrows} type="button" className="flex flex-row gap-2 items-center hover:text-foregroundHighlighted hover:bg-black transition-colors w-full relative p-2">
                 <div className="grid grid-cols-2 w-fit relative">
                     {Array.from({ length: 4 }).map((_, i) => {
@@ -71,7 +73,7 @@ export default function BestMoves() {
                     })}
                     {showArrows ? <Arrow move={[{ col: 0, row: 1 }, { col: 1, row: 1 }]} squareSize={20} white class="fill-bestArrow stroke-bestArrow" /> : null}
                 </div>
-                <span className="font-bold text-lg">Show arrows</span>
+                <span className="font-bold text-lg">{t.settings.showArrows}</span>
                 <div style={{ backgroundColor: "var(--foreground)", display: showArrows ? '' : 'none' }} className="w-3 h-3 rounded-full absolute right-3" />
             </button>
             <button onClick={toggleArrowAfterMove} type="button" className="flex flex-row gap-2 items-center hover:text-foregroundHighlighted hover:bg-black transition-colors w-full relative p-2">
@@ -92,7 +94,7 @@ export default function BestMoves() {
                     })}
                     <Arrow move={[{ col: 0, row: 1 }, { col: 1, row: 1 }]} squareSize={20} white class="fill-bestArrow stroke-bestArrow" />
                 </div>
-                <span className="font-bold text-lg">Arrow after move</span>
+                <span className="font-bold text-lg">{t.settings.arrowAfterMove}</span>
                 <div style={{ backgroundColor: "var(--foreground)", display: arrowAfterMove ? '' : 'none'}} className="w-3 h-3 rounded-full absolute right-3" />
             </button>
         </section>

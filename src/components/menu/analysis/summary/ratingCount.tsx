@@ -1,6 +1,7 @@
 import RatingSVG from "@/components/svg/rating";
 import { move, moveRating } from "@/engine/stockfish";
 import { useEffect, useState } from "react";
+import { useI18n } from "@/context/i18n";
 
 const ratings: moveRating[] = [
     "brilliant", // text-highlightBrilliant
@@ -15,13 +16,14 @@ const ratings: moveRating[] = [
     "blunder", // text-highlightBlunder
 ]
 
-function title(str: string) {
+function capitalize(str: string) {
     return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 export default function RatingCount(props: { moves: move[] }) {
     const [counter, setCounter] = useState<{ w: { [key: string]: number }, b: { [key: string]: number } }>({ w: {}, b: {} })
     const { moves } = props
+    const { t } = useI18n()
 
     useEffect(() => {
         const newCounter: { w: { [key: string]: number }, b: { [key: string]: number } } = { w: {}, b: {} }
@@ -37,11 +39,11 @@ export default function RatingCount(props: { moves: move[] }) {
     return (
         <div className="w-[85%] flex flex-col gap-3 justify-center reduceSummary:pr-[35px] pr-[26px]">
             {ratings.map(rating => {
-                const titleRating = title(rating)
+                const titleRating = capitalize(rating)
 
                 return (
                     <div key={rating} className="flex flex-row items-center justify-between">
-                        <span className="font-bold text-foregroundGrey reduceSummary:text-lg text-base">{titleRating}</span>
+                        <span className="font-bold text-foregroundGrey reduceSummary:text-lg text-base">{t.ratings[rating]}</span>
                         <div className="flex flex-row text-xl font-extrabold w-fit">
                             <span className={`reduceSummary:w-[81px] w-[40px] text-left text-highlight${titleRating}`}>{counter.w[rating] ?? 0}</span>
                             <RatingSVG draggable className="select-none" rating={rating} size={30} />

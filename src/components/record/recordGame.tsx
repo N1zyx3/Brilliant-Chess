@@ -6,8 +6,11 @@ import { Chess, Move, PAWN, PieceSymbol, Square } from "chess.js"
 import { Howl } from "howler"
 import PieceSVG from "../svg/piece"
 import { ConfigContext } from "@/context/config"
+import { useI18n } from "@/context/i18n"
 import { PENDING_ANALYSIS_KEY } from "@/context/analyze"
 import { boardThemes } from "../nav/settings/themes"
+import type { Dictionary } from "@/i18n"
+import { translate } from "@/i18n"
 
 type GameResult = "1-0" | "0-1" | "1/2-1/2" | "*"
 
@@ -57,12 +60,12 @@ function getGameResult(chess: Chess): GameResult {
     return "*"
 }
 
-function getEndText(chess: Chess) {
-    if (chess.isCheckmate()) return `${chess.turn() === 'w' ? 'Чёрные' : 'Белые'} победили матом`
-    if (chess.isStalemate()) return "Ничья из-за пата"
-    if (chess.isInsufficientMaterial()) return "Ничья из-за недостатка материала"
-    if (chess.isThreefoldRepetition()) return "Ничья из-за троекратного повторения"
-    if (chess.isDraw()) return "Ничья"
+function getEndText(chess: Chess, endTexts: Dictionary["record"]["endTexts"], white: string, black: string) {
+    if (chess.isCheckmate()) return translate(endTexts.checkmate, { winner: chess.turn() === 'w' ? black : white })
+    if (chess.isStalemate()) return endTexts.stalemate
+    if (chess.isInsufficientMaterial()) return endTexts.insufficientMaterial
+    if (chess.isThreefoldRepetition()) return endTexts.threefoldRepetition
+    if (chess.isDraw()) return endTexts.draw
     return ""
 }
 
@@ -72,12 +75,12 @@ function getLastMove(chess: Chess): LastMove | null {
     return lastMove ? { from: lastMove.from, to: lastMove.to } : null
 }
 
-function setPgnHeaders(chess: Chess, result: GameResult = "*") {
+function setPgnHeaders(chess: Chess, headers: Dictionary["record"]["headers"], result: GameResult = "*") {
     chess.header(
-        "Event", "Casual Game",
-        "Site", "Brilliant Chess",
-        "White", "White",
-        "Black", "Black",
+        "Event", headers.event,
+        "Site", headers.site,
+        "White", headers.white,
+        "Black", headers.black,
         "Result", result,
     )
 }
@@ -88,11 +91,12 @@ export default function RecordGame() {
     const configContext = useContext(ConfigContext)
     const [boardTheme] = configContext.boardTheme
     const [boardSounds] = configContext.boardSounds
+    const { t } = useI18n()
 
     const chessRef = useRef<Chess | null>(null)
     if (!chessRef.current) {
         const chess = new Chess()
-        setPgnHeaders(chess)
+        setPgnHeaders(chess, t.record.headers)
         chessRef.current = chess
     }
     const chess = chessRef.current
@@ -118,8 +122,8 @@ export default function RecordGame() {
     const position = new Chess(fen)
     const gameOver = position.isGameOver()
     const moveHistory = chess.history({ verbose: true })
-    const endText = getEndText(position)
-    const turn = position.turn() === 'w' ? 'Белые' : 'Чёрные'
+    const endText = getEndText(position, t.record.endTexts, t.common.white, t.common.black)
+    const whiteToMove = position.turn() === 'w'
     const isCheck = position.isCheck()
 
     const squareSize = boardSize / 8
@@ -371,7 +375,7 @@ export default function RecordGame() {
 
     function resetGame() {
         chess.reset()
-        setPgnHeaders(chess)
+        setPgnHeaders(chess, t.record.headers)
 
         setFen(chess.fen())
         setPgn("")
@@ -508,7 +512,7 @@ export default function RecordGame() {
                         {pendingPromotion ? (
                             <div className="absolute inset-0 z-[200] bg-black/50 flex items-center justify-center" onClick={() => setPendingPromotion(null)}>
                                 <div className="bg-backgroundBox rounded-borderRoundness p-3 shadow-lg shadow-black/50 flex flex-col gap-2 items-center" onClick={e => e.stopPropagation()}>
-                                    <span className="text-sm font-bold text-foregroundGrey">Выберите фигуру</span>
+                                    <span className="text-sm font-bold text-foregroundGrey">{t.record.promotion}</span>
                                     <div className="flex flex-row gap-1">
                                         {PROMOTION_PIECES.map(pieceType => (
                                             <button
@@ -531,33 +535,33 @@ export default function RecordGame() {
 
             <div className="bg-backgroundBox rounded-borderRoundness flex flex-col gap-4 p-4 w-full max-w-[500px] vertical:max-w-[420px] vertical:min-w-[360px] phoneLandscape:h-full phoneLandscape:overflow-y-auto select-text">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-2xl font-extrabold">Запись игры</h1>
+                    <h1 className="text-2xl font-extrabold">{t.record.title}</h1>
                     <p className="text-sm text-foregroundGrey">
-                        Передвигайте фигуры на доске. Каждый ход записывается в PGN, а ошибочный ход можно отменить в любой момент.
+                        {t.record.description}
                     </p>
                 </div>
 
                 <div className={`rounded-borderRoundness px-3 py-2 text-sm font-bold flex flex-row items-center justify-between gap-2 ${gameOver && moveHistory.length ? 'bg-backgroundBoxBoxHighlighted text-foreground' : 'bg-backgroundBoxBox text-foregroundGrey'}`}>
-                    <span>{gameOver && moveHistory.length ? endText : `Ход ${turn === 'Белые' ? 'белых' : 'чёрных'}${isCheck ? ' — шах!' : ''}`}</span>
-                    {moveHistory.length ? <span className="text-xs font-normal opacity-80">{moveHistory.length} ходов</span> : ''}
+                    <span>{gameOver && moveHistory.length ? endText : isCheck ? (whiteToMove ? t.record.turnCheckWhite : t.record.turnCheckBlack) : (whiteToMove ? t.record.turnWhite : t.record.turnBlack)}</span>
+                    {moveHistory.length ? <span className="text-xs font-normal opacity-80">{translate(t.common.moveCount, { count: moveHistory.length })}</span> : ''}
                 </div>
 
                 {gameOver && moveHistory.length ? (
                     <div className="flex flex-col gap-2 rounded-borderRoundness bg-backgroundBoxBox p-3 border border-border">
-                        <span className="font-bold">Партия завершена</span>
-                        <span className="text-sm text-foregroundGrey">{endText}. Хотите узнать, где была решена партия?</span>
+                        <span className="font-bold">{t.record.gameOver}</span>
+                        <span className="text-sm text-foregroundGrey">{endText}. {t.record.analyzePrompt}</span>
                         <button
                             type="button"
                             onClick={analyzeGame}
                             className="h-12 rounded-borderRoundness text-lg font-extrabold bg-backgroundBoxBoxHighlighted hover:bg-backgroundBoxBoxHighlightedHover transition-all hover:shadow-shadowBoxBoxHighlighted"
                         >
-                            Анализировать партию
+                            {t.record.analyzeGame}
                         </button>
                     </div>
                 ) : ''}
 
                 <div className="flex flex-col gap-2">
-                    <span className="text-sm font-bold text-foregroundGrey">Ходы</span>
+                    <span className="text-sm font-bold text-foregroundGrey">{t.record.moves}</span>
                     <div className="h-[150px] overflow-y-auto rounded-borderRoundness bg-backgroundBoxBox p-2 text-sm font-mono">
                         {moveRows.length ? (
                             <table className="w-full">
@@ -572,7 +576,7 @@ export default function RecordGame() {
                                 </tbody>
                             </table>
                         ) : (
-                            <span className="text-foregroundGrey font-sans">Ходов пока нет. Начинают белые.</span>
+                            <span className="text-foregroundGrey font-sans">{t.record.noMoves}</span>
                         )}
                     </div>
                 </div>
@@ -586,14 +590,14 @@ export default function RecordGame() {
                             disabled={!pgn}
                             className="text-xs font-bold px-3 py-1 rounded-borderRoundness bg-backgroundBoxBox hover:bg-backgroundBoxBoxHover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                            {copied ? "Скопировано!" : "Копировать PGN"}
+                            {copied ? t.record.copied : t.record.copyPgn}
                         </button>
                     </div>
                     <textarea
                         readOnly
                         spellCheck={false}
                         value={pgn}
-                        placeholder="Здесь появятся ходы по мере игры."
+                        placeholder={t.record.pgnPlaceholder}
                         className="h-[110px] w-full resize-none rounded-borderRoundness bg-backgroundBoxBox p-2 text-xs font-mono outline-none text-foregroundGrey"
                     />
                 </div>
@@ -603,17 +607,17 @@ export default function RecordGame() {
                         type="button"
                         onClick={undo}
                         disabled={!moveHistory.length}
-                        title="Отменить последний ход (Ctrl+Z)"
+                        title={t.record.undoTitle}
                         className="h-11 rounded-borderRoundness text-sm font-bold bg-backgroundBoxBox hover:bg-backgroundBoxBoxHover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                        Отменить
+                        {t.record.undo}
                     </button>
                     <button
                         type="button"
                         onClick={() => setOrientation(previous => !previous)}
                         className="h-11 rounded-borderRoundness text-sm font-bold bg-backgroundBoxBox hover:bg-backgroundBoxBoxHover transition-colors"
                     >
-                        Перевернуть
+                        {t.record.flipBoard}
                     </button>
                     <button
                         type="button"
@@ -621,12 +625,12 @@ export default function RecordGame() {
                         disabled={!moveHistory.length}
                         className="h-11 rounded-borderRoundness text-sm font-bold bg-backgroundBoxBox hover:bg-backgroundBoxBoxHover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                        Новая партия
+                        {t.record.resetGame}
                     </button>
                 </div>
 
                 <p className="text-xs text-foregroundGrey">
-                    Совет: нажмите на фигуру, а затем на поле, или перетащите её. Ctrl+Z отменяет последний ход.
+                    {t.record.help}
                 </p>
             </div>
         </div>

@@ -3,8 +3,9 @@ import Arrow from "../../svg/arrow"
 import { AnalyzeContext } from "@/context/analyze"
 import { pushPageError, pushPageWarning } from "@/components/errors/pageErrors"
 import { Chess } from "chess.js"
-import { API_BLOCKING_ERROR, GAMES_ERROR, GamesUI, getMonthName, Loading, USER_ERROR } from "./selectChessCom"
+import { GamesUI, getMonthName, Loading } from "./selectChessCom"
 import { ErrorsContext } from "@/context/errors"
+import { useI18n } from "@/context/i18n"
 
 interface Game {
     id: string;
@@ -55,6 +56,7 @@ function Games(props: { url: string, username: string, depth: number, unSelect: 
 
     const analyzeContext = useContext(AnalyzeContext)
     const errorsContext = useContext(ErrorsContext)
+    const { t } = useI18n()
 
     const setData = analyzeContext.data[1]
     const setErrors = errorsContext.errors[1]
@@ -107,15 +109,15 @@ function Games(props: { url: string, username: string, depth: number, unSelect: 
                 setGamesInfo(newGamesInfo)
             } catch {
                 unSelect()
-                await pushPageError(setErrors, GAMES_ERROR[0], GAMES_ERROR[1])
-                await pushPageWarning(setErrors, API_BLOCKING_ERROR[0], API_BLOCKING_ERROR[1])
+                await pushPageError(setErrors, t.errors.games.title, t.errors.games.description)
+                await pushPageWarning(setErrors, t.errors.api.title, t.errors.api.description)
             }
         })()
     }, [])
 
     if (gamesInfo.length === 0 && !loading) {
         return (
-            <div className="text-center font-bold text-2xl my-4">No games found in this month...</div>
+            <div className="text-center font-bold text-2xl my-4">{t.common.noGames}</div>
         )
     }
 
@@ -131,6 +133,9 @@ export default function SelectLichessOrgGame(props: { username: string, depth: n
     const [loading, setLoading] = useState(true)
 
     const errorsContext = useContext(ErrorsContext)
+    const { t, locale } = useI18n()
+
+    const [gamesTitleBefore, gamesTitleAfter] = t.selectGame.gamesTitle.split("{username}")
 
     const setErrors = errorsContext.errors[1]
 
@@ -172,23 +177,23 @@ export default function SelectLichessOrgGame(props: { username: string, depth: n
                 setDates(newDates.toReversed())
             } catch {
                 stopSelecting()
-                await pushPageError(setErrors, USER_ERROR[0], USER_ERROR[1])
-                await pushPageWarning(setErrors, API_BLOCKING_ERROR[0], API_BLOCKING_ERROR[1])
+                await pushPageError(setErrors, t.errors.user.title, t.errors.user.description)
+                await pushPageWarning(setErrors, t.errors.api.title, t.errors.api.description)
             }
         })()
     }, [username])
 
     return (
         <div className={`overflow-x-hidden overflow-y-auto ${loading ? " flex flex-col justify-center flex-grow" : ''}`}>
-            <h1 style={{display: loading ? 'none' : ''}} className="text-2xl py-4 px-8 sticky text-foreground"><a target="_blank" href={`${PLAYER_URL}${username}`} className="hover:underline text-foregroundHighlighted text-3xl font-bold">{username}</a>&apos;s games</h1>
+            <h1 style={{display: loading ? 'none' : ''}} className="text-2xl py-4 px-8 sticky text-foreground">{gamesTitleBefore}<a target="_blank" href={`${PLAYER_URL}${username}`} className="hover:underline text-foregroundHighlighted text-3xl font-bold">{username}</a>{gamesTitleAfter ?? ''}</h1>
             <hr style={{display: loading ? 'none' : ''}} className="border-border" />
             <div className="flex flex-col w-full">
-                {loading ? <Loading whatIsLoading="Archives" abort={stopSelecting} /> : null}
+                {loading ? <Loading whatIsLoading={t.common.archives} abort={stopSelecting} /> : null}
                 {dates.map((date, i) => {
                     return (
                         <div key={i}>
                             <button onClick={() => toggleSelected(i)} onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(NaN)} type="button" className={`${hovered === i || selected === i ? 'text-foregroundHighlighted' : 'text-foregroundGrey'} hover:bg-backgroundBoxHover w-full tracking-wide transition-colors text-2xl px-8 py-4 flex flex-row justify-between items-center`}>
-                                <span><b>{date.year}</b> {getMonthName(date.month)}</span>
+                                <span><b>{date.year}</b> {getMonthName(date.month, locale)}</span>
                                 <div style={{ opacity: hovered === i || selected === i ? '100' : '0', transform: `rotate(${selected !== i ? '180deg' : '0'})` }} className="transition-opacity"><Arrow class="fill-foregroundHighlighted" /></div>
                             </button>
                             {selected === i ?

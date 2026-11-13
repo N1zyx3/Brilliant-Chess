@@ -3,6 +3,7 @@
 import { AllGameArrows } from "@/components/game/game";
 import { move, result, square } from "@/engine/stockfish"
 import { createContext, useState, Dispatch, SetStateAction, useRef, useEffect } from 'react'
+import { useI18n } from "@/context/i18n"
 
 export type players = {
     name: string;
@@ -83,6 +84,7 @@ export const AnalyzeContext = createContext<{
 })
 
 export default function AnalyzeContextProvider(props: { children: React.ReactNode }) {
+    const { t, language } = useI18n()
     const [data, setData] = useState<Data>(() => {
         if (typeof window === 'undefined') return { format: "fen", string: "" }
 
@@ -98,7 +100,7 @@ export default function AnalyzeContextProvider(props: { children: React.ReactNod
     })
     const [pageState, setPageState] = useState<pageState>('default')
     const [game, setGame] = useState<move[]>([])
-    const [players, setPlayers] = useState<players>([{ name: 'White', elo: '?' }, { name: 'Black', elo: '?' }])
+    const [players, setPlayers] = useState<players>([{ name: t.common.white, elo: '?' }, { name: t.common.black, elo: '?' }])
     const [moveNumber, setMoveNumber] = useState(0)
     const [forward, setForward] = useState(true)
     const [animation, setAnimation] = useState(true)
@@ -118,6 +120,11 @@ export default function AnalyzeContextProvider(props: { children: React.ReactNod
     const moveNumberRef = useRef(moveNumber)
     const customLineRef = useRef(customLine)
     const gameLengthRef = useRef(game.length)
+
+    useEffect(() => {
+        if (pageState !== 'default') return
+        setPlayers([{ name: t.common.white, elo: '?' }, { name: t.common.black, elo: '?' }])
+    }, [language])
 
     useEffect(() => {
         customLineRef.current = customLine
